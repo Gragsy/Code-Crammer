@@ -1,60 +1,44 @@
-\# Code Crammer 🦁
+Code Crammer
 
+Stop hitting the token limit.
 
+Code Crammer is a developer utility that takes your entire Visual Studio solution (.sln) and compresses it into a single, optimized text file ready for any LLM
 
-A ruthless Windows Forms utility that processes, sanitizes, and compresses entire .NET solutions into a single, AI-ready text file.
+It doesn't just copy-paste files. It "crams" them—removing comments, whitespace, and binary junk, while intelligently squishing massive Designer files so the AI understands your UI without wasting 5,000 tokens on auto-generated code.
 
+![App Screenshot](screenshot.png)
 
+Code Crammer solves this by flattening your project structure into a format LLMs can digest in one gulp.
 
-Code Crammer allows you to feed massive codebases into Large Language Models (LLMs) like ChatGPT or Claude by stripping away the noise and focusing on the logic.
+🛠 Features that actually matter
 
+Designer Squishing: Turns 2,000 lines of `Form1.Designer.cs` into a 10-line summary. The AI knows you have a button named `btnSave`, but doesn't need to see the 50 lines of code setting its padding.
+Bible Mode (Distill Project): Creates a "Map" of your project containing only class names, method signatures, and properties. Great for asking architectural questions without sharing implementation details.
+Token Estimator: See exactly how much "cost" your project has before you paste it.
+Sanitization: Automatically strips sensitive data from `.resx` files and removes useless comments.
 
+🚀 How to use
 
-\## 🔥 Features
+1. Select your solution folder. Code Crammer automatically scans for `.csproj` and `.vbproj` files.
+2. Check the files you want. Use the tree view to include/exclude specific folders.
+3. Choose your cramming level:
+ Standard: Full code, no comments.
+ Squish Designer: Compress UI code (Recommended).
+ Distill: Signatures only (Max compression).
+4. Click Generate.
+5. Paste. The output is automatically copied to your clipboard or saved to your Downloads.
 
+📦 Download
 
+[Download the latest version here](https://github.com/Gragsy/Code-Crammer/releases/latest)
 
-\*   \*\*Universal Scraping\*\*: recursively processes C# (`.cs`), VB.NET (`.vb`), JSON, XML, and Config files.
+No installation required. Just unzip and run.
 
-\*   \*\*Bible Mode (Distill Project)\*\*: extracts only class signatures and method headers, ignoring the body. Perfect for giving AI a "map" of your project without eating tokens.
+⚙️ Requirements
 
-\*   \*\*Designer Squishing\*\*: compresses 2,000+ lines of Windows Forms Designer code into a single-line summary of controls and properties.
+Windows 10 or 11
+.NET 10 Runtime (The app will prompt you to download it if missing)
 
-\*   \*\*Token Counting\*\*: multi-threaded, real-time token estimation based on GPT-4 logic.
+⚖️ License
 
-\*   \*\*Sanitization\*\*: strips comments, binary RESX data, and whitespace to maximize information density.
-
-\*   \*\*Spell-Checker\*\*: integrated Hunspell engine to check your custom prompt messages before generating.
-
-\*   \*\*Profile System\*\*: save and load different scraping configurations for different projects.
-
-
-
-\## 🚀 Installation
-
-
-
-1\.  Go to the \[Releases](https://github.com/YOUR\_USERNAME/Code-Crammer/releases) page.
-
-2\.  Download the latest `Code-Crammer.zip`.
-
-3\.  Run `Code Crammer.exe`.
-
-
-
-\## 🛠 Requirements
-
-
-
-\*   Windows 10 or 11 (x64)
-
-\*   .NET Desktop Runtime 8.0 (or newer)
-
-
-
-\## ⚖️ License
-
-
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
+MIT License. Do whatever you want with it.
