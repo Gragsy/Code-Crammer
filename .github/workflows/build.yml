@@ -1,0 +1,36 @@
+name: Build Code Crammer
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows Desktop
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x' 
+
+    - name: Restore Dependencies
+      run: dotnet restore "Code Crammer/Code Crammer.csproj"
+
+    - name: Build and Publish
+      run: |
+        dotnet publish "Code Crammer/Code Crammer.csproj" -c Release -r win-x64 --self-contained false -o ./publish
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Code-Crammer-Build
+        path: ./publish/**
+        if-no-files-found: error

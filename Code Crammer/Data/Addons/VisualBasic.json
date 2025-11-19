@@ -1,0 +1,13 @@
+{
+  "Name": "Visual Basic",
+  "Extensions": [ ".vb" ],
+  "CommentPattern": "(\".*?\")|('.*)",
+  "DistillPatterns": {
+    "MODULE": "^\\s*(?:Public|Friend|Private)?\\s*Module\\s+(\\w+)",
+    "CLASS": "^\\s*(?:(?:Public|Friend|Private|Partial)\\s+){0,2}Class\\s+(\\w+)",
+    "ENUM": "^\\s*(?:Public|Friend|Private)?\\s*Enum\\s+(\\w+)",
+    "SUB": "^\\s*(?:Public|Friend|Private)?\\s*(?:Async\\s+)?Sub\\s+(\\w+\\s*\\(.*\\))",
+    "FUNCTION": "^\\s*(?:Public|Friend|Private)?\\s*(?:Async\\s+)?Function\\s+(\\w+\\s*\\(.*\\)\\s*As\\s*[\\w\\.<>\\[\\]\\(\\)]+)",
+    "PROPERTY": "^\\s*(?:Public|Friend|Private)?\\s*(?:ReadOnly\\s+|WriteOnly\\s+)?Property\\s+(\\w+\\s+As\\s+[\\w\\.<>\\[\\]]+)"
+  }
+}

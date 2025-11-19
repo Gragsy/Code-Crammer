@@ -1,0 +1,50 @@
+{
+  "SolutionPath": "D:\\01 - Grags\\Visual Studio\\Code Crammer",
+  "OptionStates": {
+    "Code Files": true,
+    "Config Files": false,
+    "Designer Files": false,
+    "Include Other Files": false,
+    "Json Files": true,
+    "Project Files": false,
+    "Resource Files": false,
+    "Distill Active Projects Only": false,
+    "Distill Project (Bible Mode)": false,
+    "Distill Unused": false,
+    "Exclude Project Settings": true,
+    "Remove Comments": true,
+    "Sanitize Files (Recommended)": true,
+    "Squish Designer Files": false,
+    "Copy To Clipboard": true,
+    "Create File": false,
+    "Include Message": false,
+    "Include Project Structure": false,
+    "Open File On Completion": false,
+    "Open Folder On Completion": false,
+    "Show Per-File Token Counts": true
+  },
+  "CheckedFiles": [
+    "Code Crammer\\Data\\Addons\\CSharp.json",
+    "Code Crammer\\Data\\Addons\\Python.json",
+    "Code Crammer\\Data\\Addons\\VisualBasic.json",
+    "Code Crammer\\Data\\Classes\\FileProcessor.cs",
+    "Code Crammer\\Data\\Classes\\LanguageManager.cs",
+    "Code Crammer\\Data\\Classes\\LanguageProfile.cs",
+    "Code Crammer\\Data\\Classes\\LRUCache.cs",
+    "Code Crammer\\Data\\Classes\\PathManager.cs",
+    "Code Crammer\\Data\\Classes\\ScraperOptions.cs",
+    "Code Crammer\\Data\\Classes\\TooltipContent.cs",
+    "Code Crammer\\Data\\Forms\\frmAbout.cs",
+    "Code Crammer\\Data\\Forms\\frmMain.cs",
+    "Code Crammer\\Data\\Forms\\frmMessageEditor.cs",
+    "Code Crammer\\Program.cs"
+  ],
+  "ExpandedNodes": [
+    "Code Crammer",
+    "Code Crammer\\Data",
+    "Code Crammer\\Data\\Addons",
+    "Code Crammer\\Data\\Classes",
+    "Code Crammer\\Data\\Forms",
+    "Code Crammer\\Data\\Profiles"
+  ]
+}

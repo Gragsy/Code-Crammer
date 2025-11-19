@@ -1,0 +1,13 @@
+{
+  "Name": "C#",
+  "Extensions": [ ".cs" ],
+  "CommentPattern": "(\"(?:\"\"|[^\"])*\")|('.*)",
+  "DistillPatterns": {
+    "NAMESPACE": "^\\s*namespace\\s+(\\w[\\w\\.]*)",
+    "CLASS": "^\\s*(?:public|private|internal|protected|partial|static|abstract|sealed|\\s)*class\\s+(\\w+)",
+    "INTERFACE": "^\\s*(?:public|private|internal|protected|\\s)*interface\\s+(\\w+)",
+    "ENUM": "^\\s*(?:public|private|internal|protected|\\s)*enum\\s+(\\w+)",
+    "METHOD": "^\\s*(?:public|private|internal|protected|static|async|virtual|override|\\s)*[\\w<>\\[\\]]+\\s+(\\w+)\\s*\\(.*\\)",
+    "PROPERTY": "^\\s*(?:public|private|internal|protected|static|virtual|override|\\s)*[\\w<>\\[\\]]+\\s+(\\w+)\\s*\\{"
+  }
+}

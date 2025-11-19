@@ -1,0 +1,10 @@
+{
+  "Name": "Python",
+  "Extensions": [ ".py", ".pyw", ".pyi" ],
+  "CommentPattern": "('''[\\s\\S]*?''')|(\"\"\"[\\s\\S]*?\"\"\")|(#.*)",
+  "DistillPatterns": {
+    "CLASS": "^\\s*class\\s+(\\w+)",
+    "FUNCTION": "^\\s*(?:async\\s+)?def\\s+(\\w+)",
+    "DECORATOR": "^\\s*@(\\w+)"
+  }
+}
