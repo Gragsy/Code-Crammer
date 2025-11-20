@@ -47,7 +47,7 @@ namespace Code_Crammer.Data.Forms_Classes
         private const int MAX_CACHE_SIZE = 1000;
 
         private readonly List<string> _excludeFolders = new List<string> { "\\bin\\", "\\obj\\", "\\.vs\\", "\\.git\\" };
-        private readonly string _defaultSolutionPath = @"C:\";
+        private readonly string _defaultSolutionPath = string.Empty;
         private readonly Random _random = new Random();
         private readonly List<string> _roasts = new List<string>();
         private readonly Code_Crammer.Data.LRUCache<string, string> _processedContentCache = new Code_Crammer.Data.LRUCache<string, string>(MAX_CACHE_SIZE);
@@ -205,7 +205,7 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             try
             {
-                // FIX: Only auto-scan if we actually have a valid, non-empty path
+                // LOGIC: Only scan if the text box is NOT empty and the directory actually exists.
                 if (!string.IsNullOrEmpty(txtFolderPath.Text) && Directory.Exists(txtFolderPath.Text))
                 {
                     btnGenerate.Enabled = true;
@@ -213,8 +213,9 @@ namespace Code_Crammer.Data.Forms_Classes
                 }
                 else
                 {
+                    // If empty or invalid, do nothing. Wait for user to click "Select Folder".
                     btnGenerate.Enabled = false;
-                    // Optional: Set focus to the select button to encourage action
+                    txtFolderPath.Text = string.Empty; // Clear invalid paths
                     btnSelectFolder.Focus();
                 }
             }
@@ -1806,12 +1807,27 @@ namespace Code_Crammer.Data.Forms_Classes
 
         private void LoadSettings()
         {
-            // FIX: Default to Empty String instead of C:\ so we don't auto-scan the whole drive on startup
             string lastPath = Properties.Settings.Default.LastFolderPath;
-            txtFolderPath.Text = !string.IsNullOrEmpty(lastPath) && Directory.Exists(lastPath)
-                ? lastPath
-                : string.Empty;
 
+            // FIX: Explicitly check if the saved path is "C:\" or "C:" and ignore it.
+            // This clears the "Bad Default" from previous versions.
+            if (string.Equals(lastPath, @"C:\", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(lastPath, @"C:", StringComparison.OrdinalIgnoreCase))
+            {
+                lastPath = string.Empty;
+            }
+
+            // Standard Logic: If it exists (and isn't the banned C:\), load it.
+            if (!string.IsNullOrEmpty(lastPath) && Directory.Exists(lastPath))
+            {
+                txtFolderPath.Text = lastPath;
+            }
+            else
+            {
+                txtFolderPath.Text = string.Empty;
+            }
+
+            // Load Session State
             if (!string.IsNullOrEmpty(Properties.Settings.Default.LastSessionStateJson))
             {
                 try
