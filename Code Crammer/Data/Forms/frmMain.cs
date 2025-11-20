@@ -205,7 +205,8 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             try
             {
-                if (Directory.Exists(txtFolderPath.Text))
+                // FIX: Only auto-scan if we actually have a valid, non-empty path
+                if (!string.IsNullOrEmpty(txtFolderPath.Text) && Directory.Exists(txtFolderPath.Text))
                 {
                     btnGenerate.Enabled = true;
                     await PopulateFileTreeAsync();
@@ -213,7 +214,8 @@ namespace Code_Crammer.Data.Forms_Classes
                 else
                 {
                     btnGenerate.Enabled = false;
-                    Log($"WARNING: Last used folder '{txtFolderPath.Text}' not found. Please select a valid folder.", Color.Orange);
+                    // Optional: Set focus to the select button to encourage action
+                    btnSelectFolder.Focus();
                 }
             }
             catch (Exception ex)
@@ -1804,9 +1806,11 @@ namespace Code_Crammer.Data.Forms_Classes
 
         private void LoadSettings()
         {
-            txtFolderPath.Text = !string.IsNullOrEmpty(Properties.Settings.Default.LastFolderPath) && Directory.Exists(Properties.Settings.Default.LastFolderPath)
-                ? Properties.Settings.Default.LastFolderPath
-                : _defaultSolutionPath;
+            // FIX: Default to Empty String instead of C:\ so we don't auto-scan the whole drive on startup
+            string lastPath = Properties.Settings.Default.LastFolderPath;
+            txtFolderPath.Text = !string.IsNullOrEmpty(lastPath) && Directory.Exists(lastPath)
+                ? lastPath
+                : string.Empty;
 
             if (!string.IsNullOrEmpty(Properties.Settings.Default.LastSessionStateJson))
             {
@@ -2400,6 +2404,7 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             _roasts.Clear();
             string roastsFilePath = Path.Combine(PathManager.GetDataFolderPath(), "Roasts.txt");
+
             try
             {
                 if (File.Exists(roastsFilePath))
@@ -2409,12 +2414,14 @@ namespace Code_Crammer.Data.Forms_Classes
             }
             catch (Exception ex)
             {
-                Log($"Could not load roasts from file: {ex.Message}", Color.Orange);
+                // Silently fail logging to debug, don't annoy user
+                Debug.WriteLine($"Could not load roasts from file: {ex.Message}");
             }
 
+            // FIX: If no roasts found, use a clean, professional title instead of "Project Scraper"
             if (_roasts.Count == 0)
             {
-                _roasts.Add("Code Crammer :: Project Scraper (Roasts.txt not found!)");
+                _roasts.Add("Code Crammer");
             }
         }
 
