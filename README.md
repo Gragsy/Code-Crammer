@@ -1,12 +1,12 @@
 Code Crammer
 
+![App Screenshot](screenshot.png)
+
 Stop hitting the token limit.
 
 Code Crammer is a developer utility that takes your entire Visual Studio solution (.sln) and compresses it into a single, optimized text file ready for any LLM
 
 It doesn't just copy-paste files. It "crams" them—removing comments, whitespace, and binary junk, while intelligently squishing massive Designer files so the AI understands your UI without wasting 5,000 tokens on auto-generated code.
-
-![App Screenshot](screenshot.png)
 
 Code Crammer solves this by flattening your project structure into a format LLMs can digest in one gulp.
 
