@@ -73,6 +73,11 @@ namespace Code_Crammer.Data.Forms_Classes
             txtFolderPath = new TextBox();
             btnSelectFolder = new Button();
             TipTop = new ToolTip(components);
+            mnuCram = new ToolStripMenuItem();
+            toolStripSeparator9 = new ToolStripSeparator();
+            btnUndo = new ToolStripButton();
+            btnRedo = new ToolStripButton();
+            toolStripSeparator10 = new ToolStripSeparator();
             gpbProcessing.SuspendLayout();
             gpbFileTypes.SuspendLayout();
             tsMenu.SuspendLayout();
@@ -157,7 +162,7 @@ namespace Code_Crammer.Data.Forms_Classes
             tsMenu.AutoSize = false;
             tsMenu.GripStyle = ToolStripGripStyle.Hidden;
             tsMenu.ImageScalingSize = new Size(32, 32);
-            tsMenu.Items.AddRange(new ToolStripItem[] { btnSave, btnSaveAs, ToolStripSeparator6, btnLoad, ddlProfiles, btnHelp, toolStripButton3, txtSearch, lblSearch });
+            tsMenu.Items.AddRange(new ToolStripItem[] { btnSave, btnSaveAs, ToolStripSeparator6, btnLoad, ddlProfiles, btnHelp, toolStripButton3, txtSearch, lblSearch, toolStripSeparator10, btnUndo, btnRedo });
             tsMenu.Location = new Point(0, 0);
             tsMenu.Name = "tsMenu";
             tsMenu.Size = new Size(1045, 45);
@@ -323,9 +328,9 @@ namespace Code_Crammer.Data.Forms_Classes
             tvwFiles.Size = new Size(414, 555);
             tvwFiles.TabIndex = 27;
 
-            ctmTreeView.Items.AddRange(new ToolStripItem[] { mnuCollapseUnused, ToolStripSeparator1, mnuReset, ToolStripSeparator2, mnuParent, mnuGlobal, ToolStripSeparator5, mnuView, ToolStripSeparator7, mnuConvertToText });
+            ctmTreeView.Items.AddRange(new ToolStripItem[] { mnuCollapseUnused, ToolStripSeparator1, mnuReset, ToolStripSeparator2, mnuParent, mnuGlobal, ToolStripSeparator5, mnuView, ToolStripSeparator7, mnuConvertToText, toolStripSeparator9, mnuCram });
             ctmTreeView.Name = "ContextMenuStrip1";
-            ctmTreeView.Size = new Size(163, 160);
+            ctmTreeView.Size = new Size(163, 188);
 
             mnuCollapseUnused.Name = "mnuCollapseUnused";
             mnuCollapseUnused.Size = new Size(162, 22);
@@ -395,6 +400,30 @@ namespace Code_Crammer.Data.Forms_Classes
             btnSelectFolder.TabIndex = 21;
             btnSelectFolder.Text = "Select Solution Folder...";
             btnSelectFolder.UseVisualStyleBackColor = true;
+
+            mnuCram.Name = "mnuCram";
+            mnuCram.Size = new Size(162, 22);
+            mnuCram.Text = "Cram";
+
+            toolStripSeparator9.Name = "toolStripSeparator9";
+            toolStripSeparator9.Size = new Size(159, 6);
+
+            btnUndo.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            btnUndo.Image = (Image)resources.GetObject("btnUndo.Image");
+            btnUndo.ImageTransparentColor = Color.Magenta;
+            btnUndo.Name = "btnUndo";
+            btnUndo.Size = new Size(36, 42);
+            btnUndo.ToolTipText = "Undo";
+
+            btnRedo.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            btnRedo.Image = (Image)resources.GetObject("btnRedo.Image");
+            btnRedo.ImageTransparentColor = Color.Magenta;
+            btnRedo.Name = "btnRedo";
+            btnRedo.Size = new Size(36, 42);
+            btnRedo.ToolTipText = "Redo";
+
+            toolStripSeparator10.Name = "toolStripSeparator10";
+            toolStripSeparator10.Size = new Size(6, 45);
 
             AllowDrop = true;
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -483,5 +512,10 @@ namespace Code_Crammer.Data.Forms_Classes
         private ToolStripSeparator toolStripButton3;
         private ToolStripTextBox txtSearch;
         private ToolStripButton btnLoad;
+        private ToolStripSeparator toolStripSeparator9;
+        private ToolStripMenuItem mnuCram;
+        private ToolStripButton btnUndo;
+        private ToolStripButton btnRedo;
+        private ToolStripSeparator toolStripSeparator10;
     }
 }

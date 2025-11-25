@@ -42,14 +42,14 @@ namespace Code_Crammer.Data.Forms
             rtbInfo.ReadOnly = true;
             rtbInfo.Size = new Size(332, 150);
             rtbInfo.TabIndex = 1;
-            rtbInfo.Text = "Code Crammer v1.0\n\nA tool to compress and sanitize code projects for LLM Context Windows.\n\nPowered by Caffeine and questionable life choices.\n\nhttps://buymeacoffee.com/grags\n\nhttps://paypal.me/Gragsy";
+            rtbInfo.Text = resources.GetString("rtbInfo.Text");
             rtbInfo.LinkClicked += rtbInfo_LinkClicked;
 
             lblApp.Location = new Point(12, 175);
             lblApp.Name = "lblApp";
             lblApp.Size = new Size(150, 54);
             lblApp.TabIndex = 2;
-            lblApp.Text = "G&&G Designs\r\n\r\nCode Crammer v1.0";
+            lblApp.Text = "G&&G Designs\r\n\r\nCode Crammer v1.1.0";
             lblApp.TextAlign = ContentAlignment.TopCenter;
 
             btnOK.Location = new Point(425, 206);

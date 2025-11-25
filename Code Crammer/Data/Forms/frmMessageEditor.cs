@@ -20,6 +20,7 @@ namespace Code_Crammer.Data.Forms_Classes
         private int currentWordIndex = -1;
         private int currentWordLength = 0;
         private System.Collections.Concurrent.ConcurrentDictionary<string, bool> misspelledWords = new System.Collections.Concurrent.ConcurrentDictionary<string, bool>();
+        private CancellationTokenSource _spellCheckCTS;
 
         private Font _boldFont;
 
@@ -188,82 +189,103 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             if (spellChecker == null || !rtb.Enabled || string.IsNullOrEmpty(rtb.Text)) return;
 
+            _spellCheckCTS?.Cancel();
+            _spellCheckCTS = new CancellationTokenSource();
+            var token = _spellCheckCTS.Token;
+
             string textContent = rtb.Text;
             int currentLength = textContent.Length;
 
-            var spellingResult = await Task.Run(() =>
+            try
             {
-                var matches = Regex.Matches(textContent, @"\b[\w'’]+\b");
-                var newMisspelled = new Dictionary<string, bool>();
-                bool changesDetected = false;
-
-                foreach (Match wordMatch in matches)
+                var spellingResult = await Task.Run(() =>
                 {
-                    string key = $"{wordMatch.Index}:{wordMatch.Length}";
-                    string normalizedWord = wordMatch.Value.Replace("’", "'");
-                    bool isMisspelled = !(customWords.Contains(normalizedWord) || spellChecker.Check(normalizedWord));
+                    token.ThrowIfCancellationRequested();
 
-                    newMisspelled[key] = isMisspelled;
+                    var matches = Regex.Matches(textContent, @"\b[\w'’]+\b");
+                    var newMisspelled = new Dictionary<string, bool>();
+                    bool changesDetected = false;
 
-                    if (!misspelledWords.TryGetValue(key, out bool oldStatus) || oldStatus != isMisspelled)
+                    foreach (Match wordMatch in matches)
                     {
-                        changesDetected = true;
-                    }
-                }
+                        token.ThrowIfCancellationRequested();
 
-                if (misspelledWords.Count != newMisspelled.Count) changesDetected = true;
+                        string key = $"{wordMatch.Index}:{wordMatch.Length}";
+                        string normalizedWord = wordMatch.Value.Replace("’", "'");
+                        bool isMisspelled = !(customWords.Contains(normalizedWord) || spellChecker.Check(normalizedWord));
 
-                return new { Matches = matches, Misspelled = newMisspelled, HasChanges = changesDetected };
-            });
+                        newMisspelled[key] = isMisspelled;
 
-            if (rtb.TextLength != currentLength || rtb.Text != textContent) return;
-
-            if (spellingResult.HasChanges)
-            {
-                Point scrollPoint = new Point();
-                SendMessage(rtb.Handle, EM_GETSCROLLPOS, IntPtr.Zero, ref scrollPoint);
-                int currentSelectionStart = rtb.SelectionStart;
-                int currentSelectionLength = rtb.SelectionLength;
-
-                SendMessage(rtb.Handle, EM_HIDESELECTION, 1, 0);
-                SendMessage(rtb.Handle, WM_SETREDRAW, 0, 0);
-
-                try
-                {
-                    misspelledWords.Clear();
-                    foreach (var kvp in spellingResult.Misspelled)
-                    {
-                        misspelledWords[kvp.Key] = kvp.Value;
-                    }
-
-                    using (var underlineFont = new Font(rtb.Font, FontStyle.Underline))
-                    using (var regularFont = new Font(rtb.Font, FontStyle.Regular))
-                    {
-                        foreach (Match wordMatch in spellingResult.Matches)
+                        if (!misspelledWords.TryGetValue(key, out bool oldStatus) || oldStatus != isMisspelled)
                         {
-                            string key = $"{wordMatch.Index}:{wordMatch.Length}";
-                            if (spellingResult.Misspelled.TryGetValue(key, out bool isMisspelled))
+                            changesDetected = true;
+                        }
+                    }
+
+                    if (misspelledWords.Count != newMisspelled.Count) changesDetected = true;
+
+                    return new { Matches = matches, Misspelled = newMisspelled, HasChanges = changesDetected };
+                }, token);
+
+                if (rtb.TextLength != currentLength || rtb.Text != textContent) return;
+                if (token.IsCancellationRequested) return;
+
+                if (spellingResult.HasChanges)
+                {
+                    Point scrollPoint = new Point();
+                    SendMessage(rtb.Handle, EM_GETSCROLLPOS, IntPtr.Zero, ref scrollPoint);
+
+                    int currentSelectionStart = rtb.SelectionStart;
+                    int currentSelectionLength = rtb.SelectionLength;
+
+                    SendMessage(rtb.Handle, EM_HIDESELECTION, 1, 0);
+                    SendMessage(rtb.Handle, WM_SETREDRAW, 0, 0);
+
+                    try
+                    {
+                        misspelledWords.Clear();
+                        foreach (var kvp in spellingResult.Misspelled)
+                        {
+                            misspelledWords[kvp.Key] = kvp.Value;
+                        }
+
+                        using (var underlineFont = new Font(rtb.Font, FontStyle.Underline))
+                        using (var regularFont = new Font(rtb.Font, FontStyle.Regular))
+                        {
+                            foreach (Match wordMatch in spellingResult.Matches)
                             {
-                                rtb.Select(wordMatch.Index, wordMatch.Length);
-                                rtb.SelectionFont = isMisspelled ? underlineFont : regularFont;
-                                rtb.SelectionColor = isMisspelled ? Color.Red : rtb.ForeColor;
+                                string key = $"{wordMatch.Index}:{wordMatch.Length}";
+                                if (spellingResult.Misspelled.TryGetValue(key, out bool isMisspelled))
+                                {
+                                    rtb.Select(wordMatch.Index, wordMatch.Length);
+                                    rtb.SelectionFont = isMisspelled ? underlineFont : regularFont;
+                                    rtb.SelectionColor = isMisspelled ? Color.Red : rtb.ForeColor;
+                                }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Spellcheck error: {ex.Message}");
+                    }
+                    finally
+                    {
+                        rtb.SelectionStart = currentSelectionStart;
+                        rtb.SelectionLength = currentSelectionLength;
+                        SendMessage(rtb.Handle, WM_SETREDRAW, 1, 0);
+                        SendMessage(rtb.Handle, EM_SETSCROLLPOS, IntPtr.Zero, ref scrollPoint);
+                        SendMessage(rtb.Handle, EM_HIDESELECTION, 0, 0);
+                        rtb.Invalidate();
+                    }
                 }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Spellcheck error: {ex.Message}");
-                }
-                finally
-                {
-                    rtb.SelectionStart = currentSelectionStart;
-                    rtb.SelectionLength = currentSelectionLength;
-                    SendMessage(rtb.Handle, WM_SETREDRAW, 1, 0);
-                    SendMessage(rtb.Handle, EM_SETSCROLLPOS, IntPtr.Zero, ref scrollPoint);
-                    SendMessage(rtb.Handle, EM_HIDESELECTION, 0, 0);
-                    rtb.Invalidate();
-                }
+            }
+            catch (OperationCanceledException)
+            {
+
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Critical Spellcheck error: {ex.Message}");
             }
         }
 

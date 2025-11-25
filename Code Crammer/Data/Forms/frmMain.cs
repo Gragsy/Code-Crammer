@@ -39,6 +39,12 @@ namespace Code_Crammer.Data.Forms_Classes
             }
         }
 
+        public class AppState
+        {
+            public HashSet<string> CheckedFiles { get; set; }
+            public Dictionary<string, bool> Options { get; set; }
+        }
+
         private const int TIMER_INTERVAL_REBUILD = 500;
         private const double TOKEN_CHARS_PER_TOKEN = 4.0;
         private const double TOKEN_OVERHEAD_MULTIPLIER = 1.08;
@@ -46,7 +52,16 @@ namespace Code_Crammer.Data.Forms_Classes
         private const long LARGE_FILE_THRESHOLD_BYTES = 1 * 1024 * 1024;
         private const int MAX_CACHE_SIZE = 1000;
 
-        private readonly List<string> _excludeFolders = new List<string> { "\\bin\\", "\\obj\\", "\\.vs\\", "\\.git\\" };
+        private readonly HashSet<string> _excludeFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+{
+    "bin",
+    "obj",
+    ".vs",
+    ".git",
+    "node_modules",
+    "packages"
+};
+
         private readonly string _defaultSolutionPath = string.Empty;
         private readonly Random _random = new Random();
         private readonly List<string> _roasts = new List<string>();
@@ -58,6 +73,11 @@ namespace Code_Crammer.Data.Forms_Classes
         private string _currentProfilePath;
         private CancellationTokenSource _tokenCountCTS;
         private CancellationTokenSource _scraperCTS;
+
+        private Stack<AppState> _undoStack = new Stack<AppState>();
+        private Stack<AppState> _redoStack = new Stack<AppState>();
+
+        private bool _isUndoingRedoing = false;
 
         private volatile int _tokenCountSequence = 0;
 
@@ -131,6 +151,8 @@ namespace Code_Crammer.Data.Forms_Classes
             btnLoad.Click += btnLoad_Click;
             btnSave.Click += btnSave_Click;
             btnSaveAs.Click += btnSaveAs_Click;
+            btnUndo.Click += btnUndo_Click;
+            btnRedo.Click += btnRedo_Click;
 
             ddlProfiles.SelectedIndexChanged += ddlProfiles_SelectedIndexChanged;
 
@@ -169,6 +191,7 @@ namespace Code_Crammer.Data.Forms_Classes
             mnuDeselectAllGlobal.Click += mnuDeselectAllGlobal_Click;
             mnuExpandAllGlobal.Click += mnuExpandAllGlobal_Click;
             mnuCollapseAllGlobal.Click += mnuCollapseAllGlobal_Click;
+            mnuCram.Click += mnuCram_Click;
 
             mnuCopy.Click += mnuCopy_Click;
             mnuCopySelected.Click += mnuCopySelected_Click;
@@ -183,9 +206,10 @@ namespace Code_Crammer.Data.Forms_Classes
             LanguageManager.Initialize();
 
             int roastIndex = _random.Next(0, _roasts.Count);
-            _baseFormTitle = _roasts[roastIndex];
-            UpdateFormTitle();
 
+            _baseFormTitle = _roasts[roastIndex];
+
+            UpdateFormTitle();
             LoadSettings();
             PopulateProfilesDropdown();
 
@@ -199,13 +223,16 @@ namespace Code_Crammer.Data.Forms_Classes
             TipTop.SetToolTip(btnEditMessage, TooltipContent.GetTooltip("btnEditMessage"));
             TipTop.SetToolTip(txtFolderPath, TooltipContent.GetTooltip("txtFolderPath"));
             TipTop.SetToolTip(lblTokenCount, TooltipContent.GetTooltip("lblTokenCount"));
+
+            btnUndo.ToolTipText = "Undo last selection change";
+            btnRedo.ToolTipText = "Redo last selection change";
         }
 
         private async void frmMain_Shown(object sender, EventArgs e)
         {
             try
             {
-                // LOGIC: Only scan if the text box is NOT empty and the directory actually exists.
+
                 if (!string.IsNullOrEmpty(txtFolderPath.Text) && Directory.Exists(txtFolderPath.Text))
                 {
                     btnGenerate.Enabled = true;
@@ -213,9 +240,9 @@ namespace Code_Crammer.Data.Forms_Classes
                 }
                 else
                 {
-                    // If empty or invalid, do nothing. Wait for user to click "Select Folder".
+
                     btnGenerate.Enabled = false;
-                    txtFolderPath.Text = string.Empty; // Clear invalid paths
+                    txtFolderPath.Text = string.Empty;
                     btnSelectFolder.Focus();
                 }
             }
@@ -269,6 +296,58 @@ namespace Code_Crammer.Data.Forms_Classes
 
         #region " UI Control Events "
 
+        private void btnUndo_Click(object sender, EventArgs e)
+        {
+            if (_undoStack.Count == 0) return;
+
+            _isUndoingRedoing = true;
+            tvwFiles.BeginUpdate();
+            try
+            {
+
+                var currentState = CaptureCurrentState();
+                _redoStack.Push(currentState);
+
+                var previousState = _undoStack.Pop();
+                RestoreAppState(previousState);
+
+                Log("Undo performed.", Color.Gray);
+            }
+            finally
+            {
+                tvwFiles.EndUpdate();
+                _isUndoingRedoing = false;
+                UpdateUndoRedoButtons();
+                UpdateTokenCountAsync();
+            }
+        }
+
+        private void btnRedo_Click(object sender, EventArgs e)
+        {
+            if (_redoStack.Count == 0) return;
+
+            _isUndoingRedoing = true;
+            tvwFiles.BeginUpdate();
+            try
+            {
+
+                var currentState = CaptureCurrentState();
+                _undoStack.Push(currentState);
+
+                var nextState = _redoStack.Pop();
+                RestoreAppState(nextState);
+
+                Log("Redo performed.", Color.Gray);
+            }
+            finally
+            {
+                tvwFiles.EndUpdate();
+                _isUndoingRedoing = false;
+                UpdateUndoRedoButtons();
+                UpdateTokenCountAsync();
+            }
+        }
+
         private async void btnSelectFolder_Click(object sender, EventArgs e)
         {
             using (var dialog = new FolderBrowserDialog())
@@ -307,6 +386,16 @@ namespace Code_Crammer.Data.Forms_Classes
 
         private void clbOptions_ItemCheck(object sender, ItemCheckEventArgs e)
         {
+
+            if (!_isUndoingRedoing)
+            {
+
+                var state = CaptureCurrentState();
+                _undoStack.Push(state);
+                _redoStack.Clear();
+                UpdateUndoRedoButtons();
+            }
+
             if (_isRebuilding) return;
 
             SafeInvoke(() =>
@@ -529,6 +618,23 @@ namespace Code_Crammer.Data.Forms_Classes
             if (files != null && files.Length > 0)
             {
                 string path = files[0];
+
+                if (File.Exists(path))
+                {
+                    string ext = Path.GetExtension(path).ToLowerInvariant();
+                    if (ext == ".sln" || ext == ".csproj" || ext == ".vbproj")
+                    {
+
+                        path = Path.GetDirectoryName(path);
+                    }
+                    else
+                    {
+
+                        Log("Invalid file dropped. Please drop a Folder, .sln, or .csproj file.", Color.Orange);
+                        return;
+                    }
+                }
+
                 if (Directory.Exists(path))
                 {
                     txtFolderPath.Text = path;
@@ -539,7 +645,7 @@ namespace Code_Crammer.Data.Forms_Classes
                 }
                 else
                 {
-                    Log("Please drop a folder, not a file.", Color.Orange);
+                    Log("Please drop a valid folder or solution file.", Color.Orange);
                 }
             }
         }
@@ -833,10 +939,10 @@ namespace Code_Crammer.Data.Forms_Classes
             visited.Add(dirKey);
 
             var excludedFileTypes = new List<string> {
-                ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".ico",
-                ".mp3", ".wav", ".mp4", ".avi", ".mov", ".wmv",
-                ".zip", ".rar", ".7z", ".exe", ".dll", ".pdb", ".suo", ".user"
-            };
+        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".ico",
+        ".mp3", ".wav", ".mp4", ".avi", ".mov", ".wmv",
+        ".zip", ".rar", ".7z", ".exe", ".dll", ".pdb", ".suo", ".user"
+    };
 
             try
             {
@@ -844,7 +950,8 @@ namespace Code_Crammer.Data.Forms_Classes
                 {
                     string dirName = Path.GetFileName(directoryPath);
 
-                    if (_excludeFolders.Any(f => string.Equals(dirName, f.Trim('\\'), StringComparison.OrdinalIgnoreCase))) continue;
+                    if (_excludeFolders.Contains(dirName)) continue;
+
                     if (excludeMyProject && (string.Equals(dirName, "My Project", StringComparison.OrdinalIgnoreCase) || string.Equals(dirName, "Properties", StringComparison.OrdinalIgnoreCase))) continue;
 
                     var dirNode = new TreeNode(dirName);
@@ -865,6 +972,7 @@ namespace Code_Crammer.Data.Forms_Classes
 
                     bool addFile = false;
                     bool isCheckedByDefault = true;
+
                     var langProfile = Code_Crammer.Data.LanguageManager.GetProfileForExtension(fileExt);
 
                     if (langProfile != null)
@@ -896,19 +1004,15 @@ namespace Code_Crammer.Data.Forms_Classes
                             case ".vbproj":
                                 addFile = options.IncludeProjectFile;
                                 break;
-
                             case ".resx":
                                 addFile = options.IncludeResx;
                                 break;
-
                             case ".config":
                                 addFile = options.IncludeConfig;
                                 break;
-
                             case ".json":
                                 addFile = options.IncludeJson;
                                 break;
-
                             default:
                                 if (options.IncludeOtherFiles)
                                 {
@@ -946,10 +1050,21 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             if (e.Action == TreeViewAction.Unknown) return;
             if (_treeStateBeingRestored) return;
+            if (_isUndoingRedoing) return;
 
             if (Interlocked.CompareExchange(ref _isCheckingNodeInt, 1, 0) != 0) return;
-
             if (this.Disposing || this.IsDisposed) return;
+
+            if (_lastCheckedFiles != null)
+            {
+                var state = CaptureCurrentState();
+
+                state.CheckedFiles = new HashSet<string>(_lastCheckedFiles, StringComparer.OrdinalIgnoreCase);
+
+                _undoStack.Push(state);
+                _redoStack.Clear();
+                UpdateUndoRedoButtons();
+            }
 
             tvwFiles.BeginUpdate();
             try
@@ -972,6 +1087,8 @@ namespace Code_Crammer.Data.Forms_Classes
 
                 SetChildren(e.Node);
                 UpdateParentNodeCheckState(e.Node.Parent);
+
+                _lastCheckedFiles = GetCheckedFiles(tvwFiles.Nodes);
             }
             finally
             {
@@ -1174,6 +1291,46 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             tvwFiles.CollapseAll();
             Log("All folders have been collapsed.", Color.LimeGreen);
+        }
+
+        private void mnuCram_Click(object sender, EventArgs e)
+        {
+            if (tvwFiles.SelectedNode == null || tvwFiles.SelectedNode.Tag == null) return;
+
+            string relativePath = tvwFiles.SelectedNode.Tag.ToString();
+            if (string.IsNullOrEmpty(relativePath) || !Path.HasExtension(relativePath)) return;
+
+            string fullPath = Path.Combine(txtFolderPath.Text, relativePath);
+            if (!File.Exists(fullPath)) return;
+
+            try
+            {
+                Log($"Cramming file: {relativePath}...", Color.Yellow);
+
+                var options = new ScraperOptions
+                {
+                    IncludeCode = true,
+                    IncludeDesigner = true,
+                    SquishDesignerFiles = IsOptionChecked(ScraperOption.SquishDesignerFiles),
+                    SanitizeOutput = IsOptionChecked(ScraperOption.SanitizeFiles),
+                    RemoveComments = IsOptionChecked(ScraperOption.RemoveComments),
+                    DistillProject = false,
+                    DistillUnused = false
+                };
+
+                string content = File.ReadAllText(fullPath);
+                string processed = Code_Crammer.Data.FileProcessor.ProcessFile(fullPath, content, options, false);
+
+                string tempFile = Path.ChangeExtension(Path.GetTempFileName(), Path.GetExtension(relativePath));
+                File.WriteAllText(tempFile, processed);
+
+                Process.Start("notepad.exe", tempFile);
+                Log("File crammed and opened.", Color.LimeGreen);
+            }
+            catch (Exception ex)
+            {
+                Log($"Error cramming file: {ex.Message}", Color.Red);
+            }
         }
 
         #endregion " TreeView Context Menu "
@@ -1681,6 +1838,11 @@ namespace Code_Crammer.Data.Forms_Classes
                 }
             }
 
+            var sortedProjectKeys = projectGroups.Keys
+                .Where(k => !string.IsNullOrEmpty(k))
+                .OrderByDescending(k => k.Length)
+                .ToList();
+
             bool isAnyDistillModeActive = options.DistillUnused || options.DistillUnusedHeaders;
             List<string> pathsToProcess;
 
@@ -1711,10 +1873,9 @@ namespace Code_Crammer.Data.Forms_Classes
             foreach (var relativePath in pathsToProcess)
             {
                 string fullPath = Path.Combine(solutionPath, relativePath);
-                string parentProjectDir = projectGroups.Keys
-                    .Where(dir => !string.IsNullOrEmpty(dir) && fullPath.StartsWith(dir, StringComparison.OrdinalIgnoreCase))
-                    .OrderByDescending(dir => dir.Length)
-                    .FirstOrDefault();
+
+                string parentProjectDir = sortedProjectKeys
+                    .FirstOrDefault(dir => fullPath.StartsWith(dir, StringComparison.OrdinalIgnoreCase));
 
                 if (parentProjectDir != null)
                 {
@@ -1809,15 +1970,12 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             string lastPath = Properties.Settings.Default.LastFolderPath;
 
-            // FIX: Explicitly check if the saved path is "C:\" or "C:" and ignore it.
-            // This clears the "Bad Default" from previous versions.
             if (string.Equals(lastPath, @"C:\", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(lastPath, @"C:", StringComparison.OrdinalIgnoreCase))
             {
                 lastPath = string.Empty;
             }
 
-            // Standard Logic: If it exists (and isn't the banned C:\), load it.
             if (!string.IsNullOrEmpty(lastPath) && Directory.Exists(lastPath))
             {
                 txtFolderPath.Text = lastPath;
@@ -1827,7 +1985,6 @@ namespace Code_Crammer.Data.Forms_Classes
                 txtFolderPath.Text = string.Empty;
             }
 
-            // Load Session State
             if (!string.IsNullOrEmpty(Properties.Settings.Default.LastSessionStateJson))
             {
                 try
@@ -2025,6 +2182,12 @@ namespace Code_Crammer.Data.Forms_Classes
             {
                 string fullPath = Path.GetFullPath(filePath);
                 string fullRoot = Path.GetFullPath(rootPath);
+
+                if (!fullRoot.EndsWith(Path.DirectorySeparatorChar.ToString()) && !fullRoot.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+                {
+                    fullRoot += Path.DirectorySeparatorChar;
+                }
+
                 if (!fullPath.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase))
                 {
                     Log($"SECURITY BLOCK: Attempted to access file outside solution: {filePath}", Color.Red);
@@ -2430,11 +2593,10 @@ namespace Code_Crammer.Data.Forms_Classes
             }
             catch (Exception ex)
             {
-                // Silently fail logging to debug, don't annoy user
+
                 Debug.WriteLine($"Could not load roasts from file: {ex.Message}");
             }
 
-            // FIX: If no roasts found, use a clean, professional title instead of "Project Scraper"
             if (_roasts.Count == 0)
             {
                 _roasts.Add("Code Crammer");
@@ -2453,6 +2615,7 @@ namespace Code_Crammer.Data.Forms_Classes
             while (queue.Count > 0)
             {
                 var currentDir = queue.Dequeue();
+
                 try
                 {
                     var dirFiles = Directory.GetFiles(currentDir);
@@ -2471,11 +2634,8 @@ namespace Code_Crammer.Data.Forms_Classes
                         if (visited.Contains(fullDirPath)) continue;
 
                         string dirName = Path.GetFileName(dir);
-                        bool isExcluded = _excludeFolders.Any(ex =>
-                            dirName.Equals(ex.Trim('\\'), StringComparison.OrdinalIgnoreCase) ||
-                            dir.IndexOf(ex, StringComparison.OrdinalIgnoreCase) >= 0);
 
-                        if (!isExcluded)
+                        if (!_excludeFolders.Contains(dirName))
                         {
                             visited.Add(fullDirPath);
                             queue.Enqueue(dir);
@@ -2491,6 +2651,7 @@ namespace Code_Crammer.Data.Forms_Classes
                     Debug.WriteLine($"Error scanning {currentDir}: {ex.Message}");
                 }
             }
+
             return files;
         }
 
@@ -2526,6 +2687,57 @@ namespace Code_Crammer.Data.Forms_Classes
             {
                 action();
             }
+        }
+
+        private void UpdateUndoRedoButtons()
+        {
+            btnUndo.Enabled = _undoStack.Count > 0;
+            btnRedo.Enabled = _redoStack.Count > 0;
+        }
+
+        private AppState CaptureCurrentState()
+        {
+            var state = new AppState();
+
+            state.CheckedFiles = GetCheckedFiles(tvwFiles.Nodes);
+
+            state.Options = new Dictionary<string, bool>();
+            foreach (CheckedListBox box in new[] { clbFileTypes, clbProcessing, clbOutput })
+            {
+                for (int i = 0; i < box.Items.Count; i++)
+                {
+                    string key = box.Items[i].ToString();
+                    bool value = box.GetItemChecked(i);
+                    state.Options[key] = value;
+                }
+            }
+
+            return state;
+        }
+
+        private void RestoreAppState(AppState state)
+        {
+            if (state == null) return;
+
+            foreach (CheckedListBox box in new[] { clbFileTypes, clbProcessing, clbOutput })
+            {
+                for (int i = 0; i < box.Items.Count; i++)
+                {
+                    string key = box.Items[i].ToString();
+                    if (state.Options.ContainsKey(key))
+                    {
+                        bool shouldBeChecked = state.Options[key];
+                        if (box.GetItemChecked(i) != shouldBeChecked)
+                        {
+                            box.SetItemChecked(i, shouldBeChecked);
+                        }
+                    }
+                }
+            }
+
+            SetGlobalCheckState(false);
+            RestoreTreeState(tvwFiles.Nodes, state.CheckedFiles);
+            _lastCheckedFiles = state.CheckedFiles;
         }
 
         #endregion " Helper Functions "

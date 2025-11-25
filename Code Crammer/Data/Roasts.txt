@@ -6,27 +6,18 @@ Just ship it. What's the worst that could happen?
 It's not a bug, it's an undocumented feature.
 Powered by caffeine and questionable life choices.
 Let's turn this spaghetti into... slightly more organized spaghetti.
-Counting tokens because my tears are too hard to quantify.
 Preparing a summary of your mistakes. You're welcome.
 Works on my machine. The official seal of 'not my problem'.
 This code is self-documenting. Unfortunately, it speaks only in riddles.
 Another day of convincing rocks to think for a living.
 Legacy Code Mode: Activated. Abandon all hope.
-I'm not saying I'm a bad programmer, but my rubber duck just quit.
 This code has more patches than a pirate's wardrobe.
-Project Scraper: Because 'git blame' isn't personal enough.
 Let's be honest, you're just using this to see how much trouble you're in.
 TODO: Re-evaluate all life choices that led to this moment.
-The code is clean, but the conscience isn't.
 Agile development: Making it up as we go along, but in two-week sprints.
-My code is like a toddler's drawing. I'm proud of it, but I have no idea what it does.
-The best part of my job is that the coffee is free. That's also the worst part.
-Is it 'imposter syndrome' if you're actually an imposter?
 Documenting the crime scene.
 There are two types of code: the kind you complain about, and the kind nobody uses.
 I don't need a debugger. I just stare at the code until I confess my sins.
-Today's goal: Write code that even future-me can't break.
 It compiled. Let's not ask too many questions.
-I'm a software developer. I solve problems you didn't know you had in ways you don't understand.
 This project has a bright future. Just not with this codebase.
-Scrape results are in: it's worse than we thought.
+Results are in: it's worse than we thought.

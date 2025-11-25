@@ -13,18 +13,18 @@ namespace Code_Crammer.Data
             "Resources.Designer.cs", "Settings.Designer.cs", "Reference.cs"
         };
 
-        private static readonly TimeSpan _regexTimeout = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan _regexTimeout = TimeSpan.FromSeconds(3);
 
         private static readonly Regex _csFieldRegex = new Regex(@"(?:private|public|protected|internal)\s+(?:[\w\.]+\.)*(\w+)\s+(\w+);", RegexOptions.Compiled, _regexTimeout);
 
         private static readonly Dictionary<string, Regex> _csPropertyRegexes = new Dictionary<string, Regex>
-        {
-            { "Loc", new Regex(@"this\.(\w+)\.Location\s*=\s*new\s*(?:System\.Drawing\.)?Point\s*\(\s*(\d+\s*,\s*\d+)\s*\);", RegexOptions.Compiled, _regexTimeout) },
-            { "Size", new Regex(@"this\.(\w+)\.Size\s*=\s*new\s*(?:System\.Drawing\.)?Size\s*\(\s*(\d+\s*,\s*\d+)\s*\);", RegexOptions.Compiled, _regexTimeout) },
-            { "Text", new Regex(@"this\.(\w+)\.Text\s*=\s*""((?:\\""|[^""])*)"";", RegexOptions.Compiled | RegexOptions.Singleline, _regexTimeout) },
-            { "BackColor", new Regex(@"this\.(\w+)\.BackColor\s*=\s*(?:System\.Drawing\.)?Color\.(\w+);", RegexOptions.Compiled, _regexTimeout) },
-            { "Anchor", new Regex(@"this\.(\w+)\.Anchor\s*=\s*\((.*?)\);", RegexOptions.Compiled, _regexTimeout) }
-        };
+{
+    { "Loc", new Regex(@"(?:this\.)?(\w+)\.Location\s*=\s*new\s*(?:System\.Drawing\.)?Point\s*\(\s*(\d+\s*,\s*\d+)\s*\);", RegexOptions.Compiled, _regexTimeout) },
+    { "Size", new Regex(@"(?:this\.)?(\w+)\.Size\s*=\s*new\s*(?:System\.Drawing\.)?Size\s*\(\s*(\d+\s*,\s*\d+)\s*\);", RegexOptions.Compiled, _regexTimeout) },
+    { "Text", new Regex(@"(?:this\.)?(\w+)\.Text\s*=\s*""((?:\\""|[^""])*)"";", RegexOptions.Compiled | RegexOptions.Singleline, _regexTimeout) },
+    { "BackColor", new Regex(@"(?:this\.)?(\w+)\.BackColor\s*=\s*(?:System\.Drawing\.)?Color\.(\w+);", RegexOptions.Compiled, _regexTimeout) },
+    { "Anchor", new Regex(@"(?:this\.)?(\w+)\.Anchor\s*=\s*\((.*?)\);", RegexOptions.Compiled, _regexTimeout) }
+};
 
         private static readonly Regex _vbFieldRegex = new Regex(@"(?:Public|Friend|Private|Protected)\s+WithEvents\s+(\w+)\s+As\s+(?:[a-zA-Z_]\w*\.)*(\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase, _regexTimeout);
 
@@ -125,11 +125,20 @@ namespace Code_Crammer.Data
                 var regex = LanguageManager.GetCommentRegex(languageName);
                 if (regex != null)
                 {
-                    processed = regex.Replace(processed, m =>
+                    try
                     {
-                        if (m.Groups.Count > 1 && (m.Groups[1].Success || (m.Groups.Count > 2 && m.Groups[2].Success))) return m.Value;
-                        return string.Empty;
-                    });
+                        processed = regex.Replace(processed, m =>
+                        {
+
+                            if (m.Groups.Count > 1 && (m.Groups[1].Success || (m.Groups.Count > 2 && m.Groups[2].Success))) return m.Value;
+                            return string.Empty;
+                        });
+                    }
+                    catch (RegexMatchTimeoutException)
+                    {
+
+                        System.Diagnostics.Debug.WriteLine($"Regex timeout removing comments for {languageName}");
+                    }
                 }
             }
 
@@ -137,7 +146,6 @@ namespace Code_Crammer.Data
             {
                 StringBuilder sb = new StringBuilder();
                 var lines = processed.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-
                 foreach (string line in lines)
                 {
                     string trimmedLine = line.Trim();

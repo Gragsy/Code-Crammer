@@ -1,5 +1,4 @@
 using Newtonsoft.Json.Linq;
-using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Reflection;
 
@@ -7,67 +6,72 @@ namespace Code_Crammer.Data
 {
     public static class UpdateChecker
     {
-
         private const string USER_NAME = "Gragsy";
         private const string REPO_NAME = "Code-Crammer";
-        public static async Task CheckForUpdatesAsync(bool silentIfUpToDate)
+
+        public class UpdateResult
         {
+            public bool HasUpdate { get; set; }
+            public string? LocalVersion { get; set; }
+            public string? RemoteVersion { get; set; }
+            public string? DownloadUrl { get; set; }
+            public string? ErrorMessage { get; set; }
+        }
+
+        public static async Task<UpdateResult> CheckForUpdatesAsync()
+        {
+            var result = new UpdateResult
+            {
+                LocalVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0.0"
+            };
+
             try
             {
                 using (var client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("CodeCrammer", "1.0"));
+
+                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("CodeCrammer", result.LocalVersion));
 
                     string url = $"https://api.github.com/repos/{USER_NAME}/{REPO_NAME}/releases/latest";
                     var response = await client.GetStringAsync(url);
 
                     var json = JObject.Parse(response);
-
                     var tagToken = json["tag_name"];
                     string remoteTag = tagToken?.ToString() ?? string.Empty;
 
-                    if (string.IsNullOrEmpty(remoteTag)) return;
+                    if (string.IsNullOrEmpty(remoteTag))
+                    {
+                        result.ErrorMessage = "Could not retrieve version tag from GitHub.";
+                        return result;
+                    }
 
-                    string cleanVersion = remoteTag.StartsWith("v", StringComparison.OrdinalIgnoreCase)
+                    string cleanRemoteVersion = remoteTag.StartsWith("v", StringComparison.OrdinalIgnoreCase)
                         ? remoteTag.Substring(1)
                         : remoteTag;
 
-                    Version remoteVer = new Version(cleanVersion);
-                    Version localVer = Assembly.GetExecutingAssembly().GetName().Version ?? new Version("1.0.0");
+                    result.RemoteVersion = cleanRemoteVersion;
 
-                    if (remoteVer > localVer)
+                    if (Version.TryParse(cleanRemoteVersion, out Version? remoteVer) &&
+                        Version.TryParse(result.LocalVersion, out Version? localVer))
                     {
-                        var result = MessageBox.Show(
-                            $"A new version ({remoteTag}) is available!\r\n\r\n" +
-                            "Would you like to open the download page now?",
-                            "Update Available",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Information);
-
-                        if (result == DialogResult.Yes)
+                        if (remoteVer != null && localVer != null && remoteVer > localVer)
                         {
-                            var urlToken = json["html_url"];
-                            string htmlUrl = urlToken?.ToString() ?? string.Empty;
-
-                            if (!string.IsNullOrEmpty(htmlUrl))
-                            {
-                                Process.Start(new ProcessStartInfo(htmlUrl) { UseShellExecute = true });
-                            }
+                            result.HasUpdate = true;
+                            result.DownloadUrl = json["html_url"]?.ToString();
                         }
                     }
-                    else if (!silentIfUpToDate)
+                    else
                     {
-                        MessageBox.Show("You are running the latest version.", "Up to Date", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        result.ErrorMessage = $"Version parsing failed. Local: {result.LocalVersion}, Remote: {cleanRemoteVersion}";
                     }
                 }
             }
             catch (Exception ex)
             {
-                if (!silentIfUpToDate)
-                {
-                    MessageBox.Show($"Could not check for updates: {ex.Message}", "Update Check Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                result.ErrorMessage = ex.Message;
             }
+
+            return result;
         }
     }
 }

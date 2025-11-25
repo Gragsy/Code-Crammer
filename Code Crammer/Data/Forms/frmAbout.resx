@@ -10278,6 +10278,17 @@
         ZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGTnlP3/0a/3CYkkIKwAAAAASUVORK5CYII=
 </value>
   </data>
+  <data name="rtbInfo.Text" xml:space="preserve">
+    <value>Code Crammer v1.1.0
+
+A tool to compress and sanitize code projects for LLM Context Windows.
+
+Powered by Caffeine and questionable life choices.
+
+https://buymeacoffee.com/grags
+
+https://paypal.me/Gragsy</value>
+  </data>
   <data name="btnUpdate.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAADIAAAAwCAYAAABT9ym6AAAABGdBTUEAALGPC/xhBQAADihJREFUaEPN
