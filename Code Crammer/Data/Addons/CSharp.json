@@ -1,13 +1,17 @@
 {
   "Name": "C#",
-  "Extensions": [ ".cs" ],
-  "CommentPattern": "(\"(?:\"\"|[^\"])*\")|('.*)",
+  "Extensions": [ ".cs", ".csx", ".cshtml", ".razor" ],
+  "CommentPattern": "(@\"(?:\"\"|[^\"])*\")|(\"(?:\\\\.|[^\\\\\"])*\")|(/\\*[\\s\\S]*?\\*/)|(//.*)",
   "DistillPatterns": {
-    "NAMESPACE": "^\\s*namespace\\s+(\\w[\\w\\.]*)",
-    "CLASS": "^\\s*(?:public|private|internal|protected|partial|static|abstract|sealed|\\s)*class\\s+(\\w+)",
-    "INTERFACE": "^\\s*(?:public|private|internal|protected|\\s)*interface\\s+(\\w+)",
-    "ENUM": "^\\s*(?:public|private|internal|protected|\\s)*enum\\s+(\\w+)",
-    "METHOD": "^\\s*(?:public|private|internal|protected|static|async|virtual|override|\\s)*[\\w<>\\[\\]]+\\s+(\\w+)\\s*\\(.*\\)",
-    "PROPERTY": "^\\s*(?:public|private|internal|protected|static|virtual|override|\\s)*[\\w<>\\[\\]]+\\s+(\\w+)\\s*\\{"
+    "NAMESPACE": "^\\s*namespace\\s+([\\w\\.]+)[\\s;]*",
+    "CLASS": "^\\s*(?:public|private|internal|protected|partial|static|abstract|sealed|file|\\s)*class\\s+(\\w+)",
+    "STRUCT": "^\\s*(?:public|private|internal|protected|partial|readonly|ref|file|\\s)*struct\\s+(\\w+)",
+    "RECORD": "^\\s*(?:public|private|internal|protected|partial|sealed|file|\\s)*record\\s+(?:class\\s+|struct\\s+)?(\\w+)",
+    "INTERFACE": "^\\s*(?:public|private|internal|protected|file|\\s)*interface\\s+(\\w+)",
+    "ENUM": "^\\s*(?:public|private|internal|protected|file|\\s)*enum\\s+(\\w+)",
+    "DELEGATE": "^\\s*(?:public|private|internal|protected|file|\\s)*delegate\\s+[\\w<>\\[\\]]+\\s+(\\w+)",
+    "EVENT": "^\\s*(?:public|private|internal|protected|static|virtual|override|file|\\s)*event\\s+[\\w<>\\[\\]]+\\s+(\\w+)",
+    "METHOD": "^\\s*(?:public|private|internal|protected|static|async|virtual|override|sealed|extern|unsafe|file|\\s)*[\\w<>\\[\\]]+\\s+(\\w+)\\s*\\(.*\\)",
+    "PROPERTY": "^\\s*(?:public|private|internal|protected|static|virtual|override|required|file|\\s)*[\\w<>\\[\\]]+\\s+(\\w+)\\s*\\{"
   }
 }

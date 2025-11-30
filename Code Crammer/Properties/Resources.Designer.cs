@@ -34,6 +34,5 @@ namespace Code_Crammer.Properties {
                 resourceCulture = value;
             }
         }
-
-   }
+    }
 }

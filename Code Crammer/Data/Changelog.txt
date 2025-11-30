@@ -1,0 +1,50 @@
+Code Crammer v1.2.0 - The "Dark Mode & Time Travel" Update
+🌓 Visual Skins (Dark Mode)
+
+Turn off the lights.
+
+    Dark Mode Support: Added a comprehensive Dark Theme for late-night coding sessions.
+
+    Smart Styling: The "Matrix" log console (rtbLog) stays high-contrast black/green regardless of the theme, and the Token Counter adapts intelligently to ensure visibility.
+
+    Menu Rendering: Custom renderers ensure menus don't look like Windows 95 glitches when in Dark Mode.
+
+🕰️ The "Time Machine" (Session History & Undo)
+
+Ever tweaked your settings perfectly, then lost them? Never again.
+
+    Rolling History: Automatically saves your session state every time you click Generate.
+
+    Quick Restore: Click the History icon to instantly restore any of your last 10 sessions.
+
+    Right-Click Delete: You can now right-click a history item to remove it from the list.
+
+    Undo/Redo System: Accidentally unchecked a massive folder? The new Undo/Redo buttons track your changes and even tell you exactly what action you are undoing (e.g., "Undo: Uncheck 'Data' folder").
+
+⚡ "Cram" & Engine Upgrades
+
+    Folder Cramming: The "Cram" context menu now works on Folders. Right-click a folder -> Cram, and it will recursively process every file inside it into a single Notepad window.
+
+    Smart Whitespace Handling: We now distinguish between languages. Python files preserve their indentation (critical for syntax), while C# and VB files are ruthlessly trimmed to save tokens.
+
+    Polyglot Output: Expanded Markdown support. SQL, HTML, JavaScript, TypeScript, and Python now get proper syntax highlighting tags in the output.
+
+    Designer De-Bloat: Improved the "Squish" logic to strip out verbose (System.Windows.Forms.AnchorStyles) casting garbage, saving massive amounts of tokens on WinForms designer files.
+
+🎨 UI & UX Improvements
+
+    Granular Resets: You can now right-click the header of any Options Group (File Types, Processing, Output) to reset just that section to factory defaults.
+
+    Toolbar Overhaul: Moved "Default Settings" and "Edit Message" to the main toolbar for better accessibility.
+
+    Profile Loader: Replaced the old ComboBox with a streamlined Dropdown Menu.
+
+🐛 Bug Fixes & Stability
+
+    Crash Proofing: Added a retry mechanism to Clipboard operations. If Windows is locking the clipboard, Code Crammer now waits patiently instead of crashing the app.
+
+    Button State Fix: The "Generate" button now correctly resets its text to "Cram Selected" after a cancellation or completion.
+
+    Parent Actions: Context menu actions like "Select All Children" now correctly target the parent folder even if you right-click a file inside it.
+
+    Performance: Fixed a UI freeze that could occur when generating projects with large history logs.

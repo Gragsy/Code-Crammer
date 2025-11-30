@@ -275,5 +275,53 @@ namespace Code_Crammer.Properties {
                 this["DistillUnusedHeaders"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Light")]
+        public string AppSkin {
+            get {
+                return ((string)(this["AppSkin"]));
+            }
+            set {
+                this["AppSkin"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowToolTips {
+            get {
+                return ((bool)(this["ShowToolTips"]));
+            }
+            set {
+                this["ShowToolTips"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool CallUpgrade {
+            get {
+                return ((bool)(this["CallUpgrade"]));
+            }
+            set {
+                this["CallUpgrade"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public float MessageEditorZoom {
+            get {
+                return ((float)(this["MessageEditorZoom"]));
+            }
+            set {
+                this["MessageEditorZoom"] = value;
+            }
+        }
     }
 }

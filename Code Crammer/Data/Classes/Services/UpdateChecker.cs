@@ -1,8 +1,10 @@
+#nullable enable
+
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using System.Reflection;
 
-namespace Code_Crammer.Data
+namespace Code_Crammer.Data.Classes.Services
 {
     public static class UpdateChecker
     {
@@ -12,7 +14,7 @@ namespace Code_Crammer.Data
         public class UpdateResult
         {
             public bool HasUpdate { get; set; }
-            public string? LocalVersion { get; set; }
+            public string LocalVersion { get; set; } = "1.0.0";
             public string? RemoteVersion { get; set; }
             public string? DownloadUrl { get; set; }
             public string? ErrorMessage { get; set; }
@@ -20,22 +22,32 @@ namespace Code_Crammer.Data
 
         public static async Task<UpdateResult> CheckForUpdatesAsync()
         {
+            var assembly = Assembly.GetExecutingAssembly();
+            var localVerObj = assembly.GetName().Version;
+            string appName = assembly.GetName().Name ?? "CodeCrammer";
+
+            string safeAppName = appName.Replace(" ", "");
+
+            string localVerString = localVerObj != null
+                ? $"{localVerObj.Major}.{localVerObj.Minor}.{localVerObj.Build}"
+                : "1.0.0";
+
             var result = new UpdateResult
             {
-                LocalVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0.0"
+                LocalVersion = localVerString
             };
 
             try
             {
                 using (var client = new HttpClient())
                 {
-
-                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("CodeCrammer", result.LocalVersion));
+                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(safeAppName, result.LocalVersion));
 
                     string url = $"https://api.github.com/repos/{USER_NAME}/{REPO_NAME}/releases/latest";
-                    var response = await client.GetStringAsync(url);
 
+                    var response = await client.GetStringAsync(url);
                     var json = JObject.Parse(response);
+
                     var tagToken = json["tag_name"];
                     string remoteTag = tagToken?.ToString() ?? string.Empty;
 
@@ -49,12 +61,16 @@ namespace Code_Crammer.Data
                         ? remoteTag.Substring(1)
                         : remoteTag;
 
+                    if (cleanRemoteVersion.Contains("-"))
+                    {
+                        cleanRemoteVersion = cleanRemoteVersion.Split('-')[0];
+                    }
+
                     result.RemoteVersion = cleanRemoteVersion;
 
-                    if (Version.TryParse(cleanRemoteVersion, out Version? remoteVer) &&
-                        Version.TryParse(result.LocalVersion, out Version? localVer))
+                    if (Version.TryParse(cleanRemoteVersion, out Version? remoteVer) && localVerObj != null)
                     {
-                        if (remoteVer != null && localVer != null && remoteVer > localVer)
+                        if (remoteVer != null && remoteVer > localVerObj)
                         {
                             result.HasUpdate = true;
                             result.DownloadUrl = json["html_url"]?.ToString();

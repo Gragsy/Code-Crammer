@@ -1,13 +1,17 @@
 {
   "Name": "Visual Basic",
-  "Extensions": [ ".vb" ],
+  "Extensions": [ ".vb", ".vbhtml" ],
   "CommentPattern": "(\".*?\")|('.*)",
   "DistillPatterns": {
     "MODULE": "^\\s*(?:Public|Friend|Private)?\\s*Module\\s+(\\w+)",
-    "CLASS": "^\\s*(?:(?:Public|Friend|Private|Partial)\\s+){0,2}Class\\s+(\\w+)",
+    "CLASS": "^\\s*(?:(?:Public|Friend|Private|Partial|MustInherit|NotInheritable)\\s+){0,3}Class\\s+(\\w+)",
+    "STRUCTURE": "^\\s*(?:Public|Friend|Private)?\\s*Structure\\s+(\\w+)",
+    "INTERFACE": "^\\s*(?:Public|Friend|Private)?\\s*Interface\\s+(\\w+)",
     "ENUM": "^\\s*(?:Public|Friend|Private)?\\s*Enum\\s+(\\w+)",
-    "SUB": "^\\s*(?:Public|Friend|Private)?\\s*(?:Async\\s+)?Sub\\s+(\\w+\\s*\\(.*\\))",
-    "FUNCTION": "^\\s*(?:Public|Friend|Private)?\\s*(?:Async\\s+)?Function\\s+(\\w+\\s*\\(.*\\)\\s*As\\s*[\\w\\.<>\\[\\]\\(\\)]+)",
-    "PROPERTY": "^\\s*(?:Public|Friend|Private)?\\s*(?:ReadOnly\\s+|WriteOnly\\s+)?Property\\s+(\\w+\\s+As\\s+[\\w\\.<>\\[\\]]+)"
+    "DELEGATE": "^\\s*(?:Public|Friend|Private)?\\s*Delegate\\s+(?:Sub|Function)\\s+(\\w+)",
+    "EVENT": "^\\s*(?:Public|Friend|Private|Shared|Shadows)?\\s*Event\\s+(\\w+)",
+    "SUB": "^\\s*(?:Public|Friend|Private|Shared|Protected|Overridable|Overrides|MustOverride|Async|\\s)*Sub\\s+(\\w+)",
+    "FUNCTION": "^\\s*(?:Public|Friend|Private|Shared|Protected|Overridable|Overrides|MustOverride|Async|\\s)*Function\\s+(\\w+)",
+    "PROPERTY": "^\\s*(?:Public|Friend|Private|Shared|Protected|Overridable|Overrides|MustOverride|ReadOnly|WriteOnly|Default|\\s)+Property\\s+(\\w+)"
   }
 }

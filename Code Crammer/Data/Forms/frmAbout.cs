@@ -1,5 +1,8 @@
+#nullable enable
+
+using Code_Crammer.Data.Classes.Services;
 using System.Diagnostics;
-using Code_Crammer.Data;
+using System.Reflection;
 
 namespace Code_Crammer.Data.Forms
 {
@@ -8,10 +11,29 @@ namespace Code_Crammer.Data.Forms
         public frmAbout()
         {
             InitializeComponent();
-
             this.btnUpdate.Click += btnUpdate_Click;
             this.rtbInfo.LinkClicked += rtbInfo_LinkClicked;
             this.btnOK.Click += btnOK_Click;
+            this.Load += frmAbout_Load;
+        }
+
+        private void frmAbout_Load(object? sender, EventArgs e)
+        {
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            if (version != null)
+            {
+                string verString = $"v{version.Major}.{version.Minor}.{version.Build}";
+                lblApp.Text = $"G&&G Designs\r\n\r\nCode Crammer {verString}";
+                try
+                {
+                    string currentText = rtbInfo.Text;
+                    string newText = System.Text.RegularExpressions.Regex.Replace(currentText, @"v\d+\.\d+\.\d+", verString);
+                    rtbInfo.Text = newText;
+                }
+                catch
+                {
+                }
+            }
         }
 
         private void rtbInfo_LinkClicked(object? sender, LinkClickedEventArgs e)

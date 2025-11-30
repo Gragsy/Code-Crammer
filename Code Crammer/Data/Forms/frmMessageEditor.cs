@@ -1,5 +1,6 @@
 #nullable disable
 
+using Code_Crammer.Data.Classes.Services;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using WeCantSpell.Hunspell;
@@ -100,24 +101,36 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             InitializeSpellchecker();
             SetInnerMargins(rtbMessage, 10, 10, 10, 10);
-
             rtbMessage.HideSelection = false;
             LoadMessage();
-
             if (ctmMenu.Font != null)
             {
                 _boldFont = new Font(ctmMenu.Font, FontStyle.Bold);
             }
+
+            try
+            {
+                float savedZoom = SettingsManager.GetMessageEditorZoom();
+                if (savedZoom > 0.1f && savedZoom < 50.0f)
+                {
+                    rtbMessage.ZoomFactor = savedZoom;
+                }
+            }
+            catch { }
         }
 
         private void frmMessageEditor_FormClosing(object sender, FormClosingEventArgs e)
         {
             spellCheckTimer.Stop();
             spellCheckTimer.Dispose();
-
             if (_boldFont != null)
             {
                 _boldFont.Dispose();
+            }
+
+            if (rtbMessage != null)
+            {
+                SettingsManager.SaveMessageEditorZoom(rtbMessage.ZoomFactor);
             }
         }
 
@@ -190,6 +203,7 @@ namespace Code_Crammer.Data.Forms_Classes
             if (spellChecker == null || !rtb.Enabled || string.IsNullOrEmpty(rtb.Text)) return;
 
             _spellCheckCTS?.Cancel();
+            _spellCheckCTS?.Dispose();
             _spellCheckCTS = new CancellationTokenSource();
             var token = _spellCheckCTS.Token;
 
@@ -202,6 +216,12 @@ namespace Code_Crammer.Data.Forms_Classes
                 {
                     token.ThrowIfCancellationRequested();
 
+                    if (textContent.Length > 50000)
+                    {
+
+                        return new { Matches = Regex.Matches(string.Empty, string.Empty), Misspelled = new Dictionary<string, bool>(), HasChanges = false };
+                    }
+
                     var matches = Regex.Matches(textContent, @"\b[\w'’]+\b");
                     var newMisspelled = new Dictionary<string, bool>();
                     bool changesDetected = false;
@@ -209,12 +229,15 @@ namespace Code_Crammer.Data.Forms_Classes
                     foreach (Match wordMatch in matches)
                     {
                         token.ThrowIfCancellationRequested();
-
                         string key = $"{wordMatch.Index}:{wordMatch.Length}";
                         string normalizedWord = wordMatch.Value.Replace("’", "'");
-                        bool isMisspelled = !(customWords.Contains(normalizedWord) || spellChecker.Check(normalizedWord));
 
-                        newMisspelled[key] = isMisspelled;
+                        bool isMisspelled = !customWords.Contains(normalizedWord) && !spellChecker.Check(normalizedWord);
+
+                        if (isMisspelled)
+                        {
+                            newMisspelled[key] = true;
+                        }
 
                         if (!misspelledWords.TryGetValue(key, out bool oldStatus) || oldStatus != isMisspelled)
                         {
@@ -234,7 +257,6 @@ namespace Code_Crammer.Data.Forms_Classes
                 {
                     Point scrollPoint = new Point();
                     SendMessage(rtb.Handle, EM_GETSCROLLPOS, IntPtr.Zero, ref scrollPoint);
-
                     int currentSelectionStart = rtb.SelectionStart;
                     int currentSelectionLength = rtb.SelectionLength;
 
@@ -252,14 +274,19 @@ namespace Code_Crammer.Data.Forms_Classes
                         using (var underlineFont = new Font(rtb.Font, FontStyle.Underline))
                         using (var regularFont = new Font(rtb.Font, FontStyle.Regular))
                         {
+
+                            rtb.SelectAll();
+                            rtb.SelectionFont = regularFont;
+                            rtb.SelectionColor = rtb.ForeColor;
+
                             foreach (Match wordMatch in spellingResult.Matches)
                             {
                                 string key = $"{wordMatch.Index}:{wordMatch.Length}";
-                                if (spellingResult.Misspelled.TryGetValue(key, out bool isMisspelled))
+                                if (spellingResult.Misspelled.ContainsKey(key))
                                 {
                                     rtb.Select(wordMatch.Index, wordMatch.Length);
-                                    rtb.SelectionFont = isMisspelled ? underlineFont : regularFont;
-                                    rtb.SelectionColor = isMisspelled ? Color.Red : rtb.ForeColor;
+                                    rtb.SelectionFont = underlineFont;
+                                    rtb.SelectionColor = Color.Red;
                                 }
                             }
                         }
@@ -287,7 +314,7 @@ namespace Code_Crammer.Data.Forms_Classes
             {
                 System.Diagnostics.Debug.WriteLine($"Critical Spellcheck error: {ex.Message}");
             }
-        }
+                    }
 
         private void RichTextBox_MouseDown(object sender, MouseEventArgs e)
         {
@@ -548,7 +575,7 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             try
             {
-                File.WriteAllText(MessageFilePath, rtbMessage.Text);
+                File.WriteAllText(MessageFilePath, rtbMessage.Text, System.Text.Encoding.UTF8);
                 MessageBox.Show("Message saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)

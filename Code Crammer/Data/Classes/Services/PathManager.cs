@@ -1,6 +1,6 @@
 ﻿#nullable disable
 
-namespace Code_Crammer.Data
+namespace Code_Crammer.Data.Classes.Services
 {
     public static class PathManager
     {
@@ -55,6 +55,12 @@ namespace Code_Crammer.Data
         {
             return EnsureDirectoryExists(Path.Combine(GetDataFolderPath(), "Addons"),
                                        Path.Combine(Application.StartupPath, "Data", "Addons"));
+        }
+
+        public static string GetHistoryFolderPath()
+        {
+            return EnsureDirectoryExists(Path.Combine(GetDataFolderPath(), "History"),
+                                         Path.Combine(Application.StartupPath, "Data", "History"));
         }
 
         private static string EnsureDirectoryExists(string preferredPath, string fallbackPath)

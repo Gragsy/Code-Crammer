@@ -1,19 +1,22 @@
-﻿#nullable disable
-
+#nullable enable
+using Code_Crammer.Data.Classes.Core;
+using Code_Crammer.Data.Classes.Models;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 
-namespace Code_Crammer.Data
+namespace Code_Crammer.Data.Classes.Services
 {
     public static class LanguageManager
     {
-        private static List<LanguageProfile> _profiles = new List<LanguageProfile>();
-        private static Dictionary<string, Regex> _commentRegexCache = new Dictionary<string, Regex>();
-        private static Dictionary<string, Dictionary<string, Regex>> _distillRegexCache = new Dictionary<string, Dictionary<string, Regex>>();
+        private static readonly Dictionary<string, LanguageProfile> _extensionMap = new Dictionary<string, LanguageProfile>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, Regex> _commentRegexCache = new Dictionary<string, Regex>();
+        private static readonly Dictionary<string, Dictionary<string, Regex>> _distillRegexCache = new Dictionary<string, Dictionary<string, Regex>>();
+
+        public static Action<string>? OnError;
 
         public static void Initialize()
         {
-            _profiles.Clear();
+            _extensionMap.Clear();
             _commentRegexCache.Clear();
             _distillRegexCache.Clear();
 
@@ -36,48 +39,63 @@ namespace Code_Crammer.Data
                     string json = File.ReadAllText(file);
                     var profile = JsonConvert.DeserializeObject<LanguageProfile>(json);
 
-                    if (profile != null && profile.Extensions != null && profile.Extensions.Count > 0)
+                    if (profile != null && !string.IsNullOrEmpty(profile.Name) && profile.Extensions != null)
                     {
-                        _profiles.Add(profile);
+                        foreach (var ext in profile.Extensions)
+                        {
+                            if (!_extensionMap.ContainsKey(ext))
+                            {
+                                _extensionMap[ext] = profile;
+                            }
+                        }
                         PrecompileRegexes(profile);
                     }
                 }
+                catch (JsonException jex)
+                {
+                    OnError?.Invoke($"JSON Error in {Path.GetFileName(file)}: {jex.Message}");
+                }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Failed to load language profile {file}: {ex.Message}");
+                    OnError?.Invoke($"Failed to load language profile {Path.GetFileName(file)}: {ex.Message}");
                 }
             }
         }
 
-        public static LanguageProfile GetProfileForExtension(string extension)
+        public static LanguageProfile? GetProfileForExtension(string extension)
         {
             if (string.IsNullOrEmpty(extension)) return null;
-            return _profiles.FirstOrDefault(p => p.Extensions.Contains(extension, StringComparer.OrdinalIgnoreCase));
+            return _extensionMap.TryGetValue(extension, out var profile) ? profile : null;
         }
 
-        public static Regex GetCommentRegex(string languageName)
+        public static Regex? GetCommentRegex(string languageName)
         {
-            return _commentRegexCache.ContainsKey(languageName) ? _commentRegexCache[languageName] : null;
+            return _commentRegexCache.TryGetValue(languageName, out var regex) ? regex : null;
         }
 
-        public static Dictionary<string, Regex> GetDistillRegexes(string languageName)
+        public static Dictionary<string, Regex>? GetDistillRegexes(string languageName)
         {
-            return _distillRegexCache.ContainsKey(languageName) ? _distillRegexCache[languageName] : null;
+            return _distillRegexCache.TryGetValue(languageName, out var regexes) ? regexes : null;
         }
 
         private static void PrecompileRegexes(LanguageProfile profile)
         {
-            TimeSpan timeout = TimeSpan.FromSeconds(1);
+            if (string.IsNullOrEmpty(profile.Name)) return;
+
+            TimeSpan timeout = FileProcessor.GlobalRegexTimeout;
+            bool ignoreCase = string.Equals(profile.Name, "Visual Basic", StringComparison.OrdinalIgnoreCase);
+            var options = RegexOptions.Compiled;
+            if (ignoreCase) options |= RegexOptions.IgnoreCase;
 
             if (!string.IsNullOrEmpty(profile.CommentPattern))
             {
                 try
                 {
-                    _commentRegexCache[profile.Name] = new Regex(profile.CommentPattern, RegexOptions.Compiled, timeout);
+                    _commentRegexCache[profile.Name] = new Regex(profile.CommentPattern, options, timeout);
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error compiling comment regex for {profile.Name}: {ex.Message}");
+                    OnError?.Invoke($"Regex Error (Comments) in {profile.Name}: {ex.Message}");
                 }
             }
 
@@ -88,11 +106,11 @@ namespace Code_Crammer.Data
                 {
                     try
                     {
-                        patterns[kvp.Key] = new Regex(kvp.Value, RegexOptions.Compiled | RegexOptions.Multiline, timeout);
+                        patterns[kvp.Key] = new Regex(kvp.Value, options | RegexOptions.Multiline, timeout);
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Error compiling distill regex '{kvp.Key}' for {profile.Name}: {ex.Message}");
+                        OnError?.Invoke($"Regex Error (Distill '{kvp.Key}') in {profile.Name}: {ex.Message}");
                     }
                 }
                 _distillRegexCache[profile.Name] = patterns;
@@ -112,7 +130,6 @@ namespace Code_Crammer.Data
                     { "CLASS", "^\\s*class\\s+(\\w+)" }
                 }
             };
-
             File.WriteAllText(path, JsonConvert.SerializeObject(template, Formatting.Indented));
         }
     }
