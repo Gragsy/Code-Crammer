@@ -1,84 +1,83 @@
-Code Crammer
+# Code Crammer v1.3.0  
 
-<img width="1047" height="710" alt="image" src="https://github.com/user-attachments/assets/c7a44788-4311-493d-9ccb-4c61402ca2ac" />
+<img width="1051" height="704" alt="image" src="https://github.com/user-attachments/assets/04ca51ca-0249-4048-9555-f1d6f6e3f102" />
 
-**Turn your entire solution into one AI‑ready file.**
+**Turn your entire solution into one AI‑ready file.**  
 
-**Code Crammer** is a precision context tool for developers working with LLMs. It takes your Visual Studio solution and transforms it into a single, optimized prompt.
+**Code Crammer** is a precision context tool for developers working with LLMs. It takes your Visual Studio solution and transforms it into a single, optimized prompt.  
 
-Code Crammer gives you granular control over what the AI sees. You decide what is "fluff" and what is vital context.
+Code Crammer gives you granular control over what the AI sees. You decide what is "fluff" and what is vital context.  
 
 ## ⚡ Why Code Crammer?
 
-LLMs have a context window. Don't fill it with junk.
-*   **The Problem:** Getting a full project into an AI is time‑consuming.
-Right now, you have to copy code file by file, class by class, until the AI finally has enough context. For larger solutions, this quickly becomes tedious and extremely time-consuming.
-
-*   **The Solution:** Code Crammer makes light work of the process. It scans your project and lets you cherry‑pick the files you want through a simple TreeView. With a couple of clicks, it crams everything into a single file, ready to paste, and as an added bonus there are lots of options to make it extremely efficient with tokens. 
-
+- **The Problem:** Getting a full project into an AI is time‑consuming. Copying file by file quickly becomes tedious and inefficient.  
+- **The Solution:** Code Crammer scans your project and lets you cherry‑pick files through a simple TreeView. With a couple of clicks, it crams everything into a single file, optimized for tokens.  
 
 ## 🛠 Features
 
-### 1. Intelligent Designer Squishing
-*   Parses designer files and converts thousands of lines of auto-generated layout code into a concise, human-readable summary of controls and properties.
-*   *Result:* The AI knows you have a `btnSave` and a `lblStatus`, but doesn't waste memory reading about their padding and margins.
+### 1. Intelligent Designer Squishing  
+- Converts thousands of lines of auto‑generated layout code into a concise summary of controls and properties.  
+- *Result:* The AI knows you have a `btnSave` and a `lblStatus` without wasting tokens on margins and padding.  
 
 <img width="907" height="727" alt="image" src="https://github.com/user-attachments/assets/9ecf3bb2-9c24-4f30-9970-c087f385dedd" />
 
-
-### 2. Bible Mode (Distill Project)
-Need to explain your entire architecture to an AI without pasting 50,000 lines of code?
-*   **Bible Mode** scans your project and extracts **only** class names, method signatures, and public properties.
-*   It creates a "Map" of your solution. You can feed an AI your entire project structure for the cost of a single file.
+### 2. Bible Mode (Distill Project)  
+- Extracts only class names, method signatures, and public properties.  
+- *Result:* A “map” of your solution for the cost of a single file.
 
 <img width="730" height="223" alt="image" src="https://github.com/user-attachments/assets/75634314-09c3-4b6b-a06a-1d9adbeb04bd" />
 
-### 3. Hybrid Context (Distill Unused)
-This is the power-user feature.
-*   Check the files you are actively working on (Full Code).
-*   Leave the rest unchecked.
-*   Enable **"Distill Unused"**.
-*   **Result:** The AI gets the **full code** for the files you checked, and a **Bible Mode summary** of the files you didn't. It has full context of the *dependencies* without the token cost of the *implementation*.
+### 3. Hybrid Context (Distill Unused)  
+- Full code for selected files, Bible Mode summaries for the rest.  
+- *Result:* The AI gets dependencies without the token cost of full implementations.
 
 <img width="920" height="438" alt="image" src="https://github.com/user-attachments/assets/199068a6-2818-43c4-8293-022c4c6923c5" />
 
-### 4. Total Control
-*   **Remove Comments:** Toggleable. Keep them for documentation, strip them for raw logic.
-*   **Sanitize Output:** Toggleable. Cleans up whitespace and removes binary data from RESX files.
-*   **Include/Exclude:** Use the tree view to pick exactly which folders or files make the cut.
-*   
+### 4. Total Control  
+- **Remove Comments** toggle  
+- **Sanitize Output** toggle  
+- **Include/Exclude** via TreeView  
+
 <img width="604" height="153" alt="image" src="https://github.com/user-attachments/assets/0ac65ee5-a71e-4224-9728-dc8a6348c7bf" />
 
-### 5. Workflow Power Tools
-*   **Undo/Redo:** Misclicked a folder? Full undo/redo support for file selection.
-*   **Quick Cram:** Right-click any single file in the tree to instantly process it and pop it open in Notepad.
-*   **Token Estimator:** Real-time estimation of how much "cost" you are about to paste.
-*   **Much More**
+### 5. Workflow Power Tools  
+- Undo/Redo for file selection  
+- Quick Cram (right‑click → instant Notepad output)  
+- Token Estimator (real‑time token cost preview)  
 
-<img width="251" height="213" alt="image" src="https://github.com/user-attachments/assets/b75256a8-cc33-4cd2-b26c-b586f8dfbfec" />
+## 🚀 What’s New in v1.3.0
 
+- **Clipboard Safety Valve** (100MB limit, STA thread)  
+- **Path Traversal Protection**  
+- **ReDoS‑safe Regex**  
+- **Corrupt Settings Recovery**  
+- **File Handle Safety**  
+- **Async I/O everywhere**  
+- **Zero‑flicker TreeView**  
+- **Dark Mode with custom renderers**
+<img width="434" height="210" alt="image" src="https://github.com/user-attachments/assets/20a859ff-3822-4d9c-91ff-82b7f243a6e4" />
 
-## 🚀 How to use
+- **Rolling session history + Undo/Redo**
+ <img width="288" height="114" alt="image" src="https://github.com/user-attachments/assets/efb941ab-b5ad-4ec7-b652-8b2f8a168654" />
 
-1.  **Select your solution folder.** Code Crammer automatically scans for project files.
-2.  **Select your files.** Use the checkboxes.
-3.  **Choose your strategy:**
-    *   *Standard:* Just give me the code.
-    *   *Squish Designer:* Compress the UI junk (Recommended).
-    *   *Distill Unused:* Full code for selected, summary for unselected (The "Hybrid" approach).
-4.  **Generate.** The output is copied to your clipboard or saved to a file.
+- **Folder Cramming + Polyglot Markdown output**  
+<img width="326" height="256" alt="image" src="https://github.com/user-attachments/assets/5e523f42-114c-4554-a00e-b39d23672e6e" />
 
-## 📦 Download
+## 📦 Installation
 
-[**Download the latest version here**](https://github.com/Gragsy/Code-Crammer/releases/latest)
+1. [**Download Code Crammer v1.3.0.zip**](https://github.com/Gragsy/Code-Crammer/releases/latest)  
+2. Extract it anywhere  
+3. Run `CodeCrammer.exe`  
 
-No installation required. Just unzip and run.
+👉 This release starts with a clean profile — no leftover settings from previous versions.  
 
 ## ⚙️ Requirements
 
-*   Windows 10 or 11
-*   .NET 8 Runtime (The app will prompt you to download it if missing)
+- Windows 10 or 11  
+- .NET 8 Runtime (prompted if missing)  
 
 ## ⚖️ License
 
-MIT License. Do whatever you want with it.
+MIT License — free to use, modify, and share.  
+
+💡 Found a bug or got an idea? Open an [issue](https://github.com/Gragsy/Code-Crammer/issues) and help shape **v1.4**.  
