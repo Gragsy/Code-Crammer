@@ -1,50 +1,38 @@
-Code Crammer v1.2.0 - The "Dark Mode & Time Travel" Update
-🌓 Visual Skins (Dark Mode)
+# Code Crammer v1.3.0 - The "Battle-Hardened" Update
 
-Turn off the lights.
+This isn't just a fresh coat of paint. We tore the engine down and rebuilt it. Code Crammer is now faster, safer, and more stable than ever before.
 
-    Dark Mode Support: Added a comprehensive Dark Theme for late-night coding sessions.
+### 🛡️ Security & Stability (The "Bulletproof" Protocol)
+*   **Clipboard Safety Valve:** Added a hard 100MB limit and a dedicated background thread (STA) for clipboard operations. No more freezing the UI or crashing the OS if you try to copy a massive project.
+*   **Path Traversal Protection:** Implemented rigorous path validation to ensure malicious project files can't trick the scraper into reading files outside the solution folder.
+*   **ReDoS Protection:** Optimized Regex patterns to prevent "Catastrophic Backtracking" on complex files.
+*   **Corrupt Settings Recovery:** If your settings file gets corrupted (e.g., power loss), the app now gracefully resets to defaults instead of crashing on startup.
+*   **File Handle Safety:** The scraper now handles locked files gracefully. If one file fails (e.g., access denied), it logs the error and continues processing the rest of the project instead of aborting the whole job.
 
-    Smart Styling: The "Matrix" log console (rtbLog) stays high-contrast black/green regardless of the theme, and the Token Counter adapts intelligently to ensure visibility.
+### 🚀 Performance & Engineering
+*   **Async I/O Everywhere:** We rewrote the file processing engine to use Asynchronous I/O. Reading thousands of files no longer blocks the UI thread. The app remains responsive even during heavy loads.
+*   **Memory Optimization:** Implemented a strict limit (200 items) on the internal file cache to prevent memory ballooning on massive solutions.
+*   **Zero-Flicker TreeView:** Enabled Double-Buffering on the file tree. Expanding large folders is now buttery smooth with no visual stutter.
+*   **Smart Spell Check:** The message editor spell checker now throttles itself and cancels old tasks immediately, preventing CPU spikes when pasting large blocks of text.
 
-    Menu Rendering: Custom renderers ensure menus don't look like Windows 95 glitches when in Dark Mode.
+### 🌓 Visual Skins (Dark Mode)
+*   **Turn off the lights:** Added a comprehensive Dark Theme for late-night coding sessions.
+*   **Smart Styling:** The "Matrix" log console stays high-contrast black/green, and menus use custom renderers to look native in Dark Mode.
 
-🕰️ The "Time Machine" (Session History & Undo)
+### 🕰️ The "Time Machine" (Session History & Undo)
+*   **Rolling History:** Automatically saves your session state every time you click Generate.
+*   **Undo/Redo System:** Accidentally unchecked a massive folder? The new Undo/Redo buttons track your changes and tell you exactly what action you are undoing.
+*   **Smart Expansion:** The file tree now intelligently remembers which folders were expanded, but strictly enforces a "Selection = Expansion" rule to keep the view clean.
 
-Ever tweaked your settings perfectly, then lost them? Never again.
+### ⚡ Engine Upgrades
+*   **Folder Cramming:** Right-click a folder -> Cram to recursively process it into a single Notepad window.
+*   **Polyglot Output:** Expanded Markdown support for SQL, HTML, JS, TS, and Python.
+*   **Designer De-Bloat:** Improved "Squish" logic to strip verbose WinForms casting garbage, saving massive token counts.
 
-    Rolling History: Automatically saves your session state every time you click Generate.
+---
 
-    Quick Restore: Click the History icon to instantly restore any of your last 10 sessions.
-
-    Right-Click Delete: You can now right-click a history item to remove it from the list.
-
-    Undo/Redo System: Accidentally unchecked a massive folder? The new Undo/Redo buttons track your changes and even tell you exactly what action you are undoing (e.g., "Undo: Uncheck 'Data' folder").
-
-⚡ "Cram" & Engine Upgrades
-
-    Folder Cramming: The "Cram" context menu now works on Folders. Right-click a folder -> Cram, and it will recursively process every file inside it into a single Notepad window.
-
-    Smart Whitespace Handling: We now distinguish between languages. Python files preserve their indentation (critical for syntax), while C# and VB files are ruthlessly trimmed to save tokens.
-
-    Polyglot Output: Expanded Markdown support. SQL, HTML, JavaScript, TypeScript, and Python now get proper syntax highlighting tags in the output.
-
-    Designer De-Bloat: Improved the "Squish" logic to strip out verbose (System.Windows.Forms.AnchorStyles) casting garbage, saving massive amounts of tokens on WinForms designer files.
-
-🎨 UI & UX Improvements
-
-    Granular Resets: You can now right-click the header of any Options Group (File Types, Processing, Output) to reset just that section to factory defaults.
-
-    Toolbar Overhaul: Moved "Default Settings" and "Edit Message" to the main toolbar for better accessibility.
-
-    Profile Loader: Replaced the old ComboBox with a streamlined Dropdown Menu.
-
-🐛 Bug Fixes & Stability
-
-    Crash Proofing: Added a retry mechanism to Clipboard operations. If Windows is locking the clipboard, Code Crammer now waits patiently instead of crashing the app.
-
-    Button State Fix: The "Generate" button now correctly resets its text to "Cram Selected" after a cancellation or completion.
-
-    Parent Actions: Context menu actions like "Select All Children" now correctly target the parent folder even if you right-click a file inside it.
-
-    Performance: Fixed a UI freeze that could occur when generating projects with large history logs.
+### 🐛 Bug Fixes
+*   Fixed a race condition where the TreeView could become corrupted if options were toggled rapidly.
+*   Fixed a logic bug where the "Token Counter" would continue processing in the background even after a new count was started.
+*   Fixed an issue where the "Massage" easter egg would block the UI thread (it now shakes the window responsibly).
+*   Fixed the "Settings Upgrade" trap that could soft-lock the application.
