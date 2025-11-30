@@ -668,8 +668,6 @@ namespace Code_Crammer.Data.Forms_Classes
                 return;
             }
 
-            // Fix: Capture BOTH expansion and check state from the live tree before rebuilding.
-            // This prevents state loss if _lastCheckedFiles was out of sync (e.g. after profile load).
             if (tvwFiles.Nodes.Count > 0)
             {
                 _lastExpandedNodes = _treeViewManager.GetExpansionState();
@@ -972,9 +970,6 @@ namespace Code_Crammer.Data.Forms_Classes
                 _treeViewManager.RestoreTreeState(profile.CheckedFiles);
                 _treeViewManager.RestoreExpansionState(profile.ExpandedNodes);
 
-                // Fix: Explicitly sync the backing fields with the profile data.
-                // Since events are suppressed, AfterCheck won't fire to update these, 
-                // so we must do it manually to prevent state loss on next rebuild.
                 _lastCheckedFiles = new HashSet<string>(profile.CheckedFiles, StringComparer.OrdinalIgnoreCase);
                 _lastExpandedNodes = new HashSet<string>(profile.ExpandedNodes, StringComparer.OrdinalIgnoreCase);
             }

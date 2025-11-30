@@ -78,14 +78,13 @@ namespace Code_Crammer.Data.Forms_Classes
         {
             this.Load += frmMessageEditor_Load;
             this.FormClosing += frmMessageEditor_FormClosing;
-
             btnSave.Click += btnSave_Click;
-
             rtbMessage.TextChanged += RichTextBox_TextChanged;
             rtbMessage.MouseDown += RichTextBox_MouseDown;
 
-            spellCheckTimer.Tick += spellCheckTimer_Tick;
+            rtbMessage.Resize += (s, e) => SetInnerMargins(rtbMessage, 20, 20, 20, 20);
 
+            spellCheckTimer.Tick += spellCheckTimer_Tick;
             ctmMenu.Opening += ctmMenu_Opening;
             mnuAdd.Click += mnuAdd_Click;
             mnuCut.Click += mnuCut_Click;
@@ -215,10 +214,8 @@ namespace Code_Crammer.Data.Forms_Classes
                 var spellingResult = await Task.Run(() =>
                 {
                     token.ThrowIfCancellationRequested();
-
                     if (textContent.Length > 50000)
                     {
-
                         return new { Matches = Regex.Matches(string.Empty, string.Empty), Misspelled = new Dictionary<string, bool>(), HasChanges = false };
                     }
 
@@ -231,7 +228,6 @@ namespace Code_Crammer.Data.Forms_Classes
                         token.ThrowIfCancellationRequested();
                         string key = $"{wordMatch.Index}:{wordMatch.Length}";
                         string normalizedWord = wordMatch.Value.Replace("’", "'");
-
                         bool isMisspelled = !customWords.Contains(normalizedWord) && !spellChecker.Check(normalizedWord);
 
                         if (isMisspelled)
@@ -255,26 +251,25 @@ namespace Code_Crammer.Data.Forms_Classes
 
                 if (spellingResult.HasChanges)
                 {
+                    misspelledWords.Clear();
+                    foreach (var kvp in spellingResult.Misspelled)
+                    {
+                        misspelledWords[kvp.Key] = kvp.Value;
+                    }
+
                     Point scrollPoint = new Point();
                     SendMessage(rtb.Handle, EM_GETSCROLLPOS, IntPtr.Zero, ref scrollPoint);
                     int currentSelectionStart = rtb.SelectionStart;
                     int currentSelectionLength = rtb.SelectionLength;
 
-                    SendMessage(rtb.Handle, EM_HIDESELECTION, 1, 0);
                     SendMessage(rtb.Handle, WM_SETREDRAW, 0, 0);
+                    SendMessage(rtb.Handle, EM_HIDESELECTION, 1, 0);
 
                     try
                     {
-                        misspelledWords.Clear();
-                        foreach (var kvp in spellingResult.Misspelled)
-                        {
-                            misspelledWords[kvp.Key] = kvp.Value;
-                        }
-
                         using (var underlineFont = new Font(rtb.Font, FontStyle.Underline))
                         using (var regularFont = new Font(rtb.Font, FontStyle.Regular))
                         {
-
                             rtb.SelectAll();
                             rtb.SelectionFont = regularFont;
                             rtb.SelectionColor = rtb.ForeColor;
@@ -299,22 +294,22 @@ namespace Code_Crammer.Data.Forms_Classes
                     {
                         rtb.SelectionStart = currentSelectionStart;
                         rtb.SelectionLength = currentSelectionLength;
-                        SendMessage(rtb.Handle, WM_SETREDRAW, 1, 0);
                         SendMessage(rtb.Handle, EM_SETSCROLLPOS, IntPtr.Zero, ref scrollPoint);
                         SendMessage(rtb.Handle, EM_HIDESELECTION, 0, 0);
+
+                        SendMessage(rtb.Handle, WM_SETREDRAW, 1, 0);
                         rtb.Invalidate();
                     }
                 }
             }
             catch (OperationCanceledException)
             {
-
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Critical Spellcheck error: {ex.Message}");
             }
-                    }
+        }
 
         private void RichTextBox_MouseDown(object sender, MouseEventArgs e)
         {
