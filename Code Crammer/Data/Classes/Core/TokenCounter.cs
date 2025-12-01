@@ -25,7 +25,8 @@ namespace Code_Crammer.Data.Classes.Core
             try
             {
                 var allFiles = treeManager.GetAllFilePaths();
-                var checkedProjects = treeManager.GetCheckedTopLevelNodes();
+                // CHANGED: Use GetCheckedNodeTags instead of GetCheckedTopLevelNodes for robust project detection
+                var checkedNodeTags = treeManager.GetCheckedNodeTags();
                 var selectedFiles = treeManager.GetCheckedFiles();
                 string structureString = options.IncludeFolderLayout ? treeManager.GetTreeAsText() : "";
 
@@ -33,7 +34,7 @@ namespace Code_Crammer.Data.Classes.Core
                     solutionPath,
                     options,
                     allFiles,
-                    checkedProjects,
+                    checkedNodeTags,
                     selectedFiles,
                     cachedProjectFiles,
                     progress,

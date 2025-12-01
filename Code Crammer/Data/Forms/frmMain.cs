@@ -415,12 +415,20 @@ namespace Code_Crammer.Data.Forms_Classes
 
         private void clbOptions_ItemCheck(object? sender, ItemCheckEventArgs e)
         {
+            if (sender is CheckedListBox clb)
+            {
+                // Enforce radio-button behavior for Distill options
+                _optionsUiManager.EnforceDistillExclusivity(clb, e);
+            }
+
             if (!_isUndoingRedoing)
             {
                 var state = CaptureCurrentState();
                 PushUndoState(state);
             }
+
             if (_isRebuilding) return;
+
             this.BeginInvoke(new Action(() =>
             {
                 SetMainControlsEnabled(false);

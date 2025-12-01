@@ -14,6 +14,13 @@ namespace Code_Crammer.Data.Classes.Components
         private readonly Action<string, Color> _log;
         private int _lastTooltipIndex = -1;
 
+        private bool _isUpdatingOptions = false;
+        private readonly string[] _distillOptions = new[]
+        {
+        "Distill Project (Bible Mode)",
+        "Distill Unused",
+        "Distill Active Projects Only"
+    };
         public OptionsUiManager(CheckedListBox fileTypes, CheckedListBox processing, CheckedListBox output, Action<string, Color> logAction)
         {
             _clbFileTypes = fileTypes;
@@ -205,6 +212,45 @@ namespace Code_Crammer.Data.Classes.Components
             }
             _log($"Could not find option '{optionText}' in the lists.", Color.Red);
             return false;
+        }
+
+        public void EnforceDistillExclusivity(CheckedListBox list, ItemCheckEventArgs e)
+        {
+            // Prevent infinite recursion when we programmatically uncheck items
+            if (_isUpdatingOptions) return;
+
+            // We only care if the user is turning an option ON
+            if (e.NewValue != CheckState.Checked) return;
+
+            string changedItem = list.Items[e.Index].ToString() ?? string.Empty;
+
+            // If the item isn't one of our Distill modes, ignore it
+            if (!Array.Exists(_distillOptions, opt => opt.Equals(changedItem, StringComparison.OrdinalIgnoreCase))) return;
+
+            _isUpdatingOptions = true;
+            try
+            {
+                for (int i = 0; i < list.Items.Count; i++)
+                {
+                    // Skip the item the user just clicked
+                    if (i == e.Index) continue;
+
+                    string itemText = list.Items[i].ToString() ?? string.Empty;
+
+                    // If it's one of the other Distill options and it's currently checked, uncheck it
+                    if (Array.Exists(_distillOptions, opt => opt.Equals(itemText, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        if (list.GetItemChecked(i))
+                        {
+                            list.SetItemChecked(i, false);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                _isUpdatingOptions = false;
+            }
         }
 
         private string GetEnumDescription(Enum value)

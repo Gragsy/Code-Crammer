@@ -48,7 +48,7 @@ namespace Code_Crammer.Data.Classes.Core
             string solutionPath,
             ScraperOptions options,
             List<string> allFiles,
-            HashSet<string> checkedProjects,
+            HashSet<string> checkedNodeTags,
             HashSet<string> selectedFiles,
             List<string> cachedProjectFiles,
             IProgress<string>? progress,
@@ -73,14 +73,13 @@ namespace Code_Crammer.Data.Classes.Core
                 }
 
                 progress?.Report("Grouping files by project...");
-
-                var projectGroups = await Task.Run(() => GroupFilesByProject(solutionPath, allFiles, checkedProjects, selectedFiles, options, cachedProjectFiles), ct);
+                var projectGroups = await Task.Run(() => GroupFilesByProject(solutionPath, allFiles, checkedNodeTags, selectedFiles, options, cachedProjectFiles), ct);
 
                 ct.ThrowIfCancellationRequested();
 
                 string fileReportPart = await BuildReportFromGroupedFilesAsync(solutionPath, projectGroups, selectedFiles, options, cachedProjectFiles, progress, ct);
-
                 report.Append(fileReportPart);
+
                 ct.ThrowIfCancellationRequested();
 
                 if (options.IncludeMessage && !string.IsNullOrWhiteSpace(messageContent))
@@ -104,7 +103,7 @@ namespace Code_Crammer.Data.Classes.Core
         private static Dictionary<string, List<string>> GroupFilesByProject(
             string solutionPath,
             List<string> allFiles,
-            HashSet<string> checkedProjects,
+            HashSet<string> checkedNodeTags,
             HashSet<string> selectedFiles,
             ScraperOptions options,
             List<string> cachedProjectFiles)
@@ -146,12 +145,27 @@ namespace Code_Crammer.Data.Classes.Core
             {
                 if (options.DistillUnusedHeaders)
                 {
-                    var projectDirsForHeaders = displayNames
-                        .Where(kvp => checkedProjects.Contains(kvp.Value))
-                        .Select(kvp => kvp.Key)
-                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    // Logic for DistillUnusedHeaders (Active Projects Only)
+                    // We check if the PROJECT DIRECTORY is in the checked tags
 
-                    bool isSolutionItemsChecked = checkedProjects.Contains(AppConstants.HeaderSolutionItems);
+                    var activeProjectDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    // Check solution root
+                    if (checkedNodeTags.Contains(solutionPath))
+                    {
+                        activeProjectDirs.Add(solutionPath);
+                    }
+
+                    foreach (var projDir in displayNames.Keys)
+                    {
+                        string relPath = PathHelper.GetSafeRelativePath(solutionPath, projDir);
+                        if (checkedNodeTags.Contains(relPath) || checkedNodeTags.Contains(projDir))
+                        {
+                            activeProjectDirs.Add(projDir);
+                        }
+                    }
+
+                    bool isSolutionItemsChecked = checkedNodeTags.Contains(solutionPath); // Root check acts as solution items check usually
 
                     pathsToProcess = allFiles.Where(relPath =>
                     {
@@ -164,8 +178,9 @@ namespace Code_Crammer.Data.Classes.Core
 
                         if (parentProjDir != null)
                         {
-                            return projectDirsForHeaders.Contains(parentProjDir);
+                            return activeProjectDirs.Contains(parentProjDir);
                         }
+
                         return isSolutionItemsChecked && (Path.GetDirectoryName(fullPath) ?? "").Equals(solutionPath, StringComparison.OrdinalIgnoreCase);
                     }).ToList();
                 }

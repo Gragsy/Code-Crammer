@@ -466,5 +466,28 @@ namespace Code_Crammer.Data.Classes.Components
             BuildString(_treeView.Nodes, "");
             return sb.ToString();
         }
+
+        public HashSet<string> GetCheckedNodeTags()
+        {
+            var checkedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            void RecursiveGet(TreeNodeCollection nodes)
+            {
+                foreach (TreeNode node in nodes)
+                {
+                    if (node.Checked && node.Tag is string tagStr)
+                    {
+                        checkedTags.Add(tagStr);
+                    }
+                    if (node.Nodes.Count > 0)
+                    {
+                        RecursiveGet(node.Nodes);
+                    }
+                }
+            }
+
+            RecursiveGet(_treeView.Nodes);
+            return checkedTags;
+        }
     }
 }
