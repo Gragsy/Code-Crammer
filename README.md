@@ -69,8 +69,6 @@ Code Crammer gives you granular control over what the AI sees. You decide what i
 2. Extract it anywhere  
 3. Run `CodeCrammer.exe`  
 
-👉 This release starts with a clean profile — no leftover settings from previous versions.  
-
 ## ⚙️ Requirements
 
 - Windows 10 or 11  
