@@ -111,7 +111,8 @@ namespace Code_Crammer.Data.Classes.Core
             var projectGroups = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
             var displayNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            projectGroups.Add(string.Empty, new List<string>());
+            // 1. Set up the groups based on .csproj/.vbproj files
+            projectGroups.Add(string.Empty, new List<string>()); // For solution items
 
             if (cachedProjectFiles.Count == 0)
             {
@@ -138,6 +139,7 @@ namespace Code_Crammer.Data.Classes.Core
                 .OrderByDescending(k => k.Length)
                 .ToList();
 
+            // 2. Determine which files to process
             bool isAnyDistillModeActive = options.DistillUnused || options.DistillUnusedHeaders;
             List<string> pathsToProcess;
 
@@ -145,28 +147,36 @@ namespace Code_Crammer.Data.Classes.Core
             {
                 if (options.DistillUnusedHeaders)
                 {
-                    // Logic for DistillUnusedHeaders (Active Projects Only)
-                    // We check if the PROJECT DIRECTORY is in the checked tags
+                    // --- FIX START ---
+                    // "Active Projects Only" Logic:
+                    // Only consider a project "Active" if it contains at least one SELECTED file.
+                    // This prevents parent folders (like Solution Root) from becoming "Active" just because a child project is checked.
 
                     var activeProjectDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                    // Check solution root
-                    if (checkedNodeTags.Contains(solutionPath))
+                    foreach (var selectedFile in selectedFiles)
                     {
-                        activeProjectDirs.Add(solutionPath);
-                    }
+                        string fullPath = Path.Combine(solutionPath, selectedFile);
 
-                    foreach (var projDir in displayNames.Keys)
-                    {
-                        string relPath = PathHelper.GetSafeRelativePath(solutionPath, projDir);
-                        if (checkedNodeTags.Contains(relPath) || checkedNodeTags.Contains(projDir))
+                        // Find which project this file belongs to
+                        string? parentProjDir = sortedProjectKeys.FirstOrDefault(dir =>
                         {
-                            activeProjectDirs.Add(projDir);
+                            string dirWithSep = dir.EndsWith(Path.DirectorySeparatorChar.ToString()) ? dir : dir + Path.DirectorySeparatorChar;
+                            return fullPath.StartsWith(dirWithSep, StringComparison.OrdinalIgnoreCase);
+                        });
+
+                        if (parentProjDir != null)
+                        {
+                            activeProjectDirs.Add(parentProjDir);
+                        }
+                        else
+                        {
+                            // Belongs to solution root / solution items
+                            activeProjectDirs.Add(string.Empty);
                         }
                     }
 
-                    bool isSolutionItemsChecked = checkedNodeTags.Contains(solutionPath); // Root check acts as solution items check usually
-
+                    // Now gather ALL files (selected OR unselected) that belong to these active projects
                     pathsToProcess = allFiles.Where(relPath =>
                     {
                         string fullPath = Path.Combine(solutionPath, relPath);
@@ -181,19 +191,25 @@ namespace Code_Crammer.Data.Classes.Core
                             return activeProjectDirs.Contains(parentProjDir);
                         }
 
-                        return isSolutionItemsChecked && (Path.GetDirectoryName(fullPath) ?? "").Equals(solutionPath, StringComparison.OrdinalIgnoreCase);
+                        // If it doesn't belong to a project, it's a solution item. 
+                        // Only include if we have marked solution items as active (via string.Empty key)
+                        return activeProjectDirs.Contains(string.Empty) && (Path.GetDirectoryName(fullPath) ?? "").Equals(solutionPath, StringComparison.OrdinalIgnoreCase);
                     }).ToList();
+                    // --- FIX END ---
                 }
                 else
                 {
+                    // Distill Unused (Global) - Include everything
                     pathsToProcess = allFiles;
                 }
             }
             else
             {
+                // Standard Mode - Only explicitly selected files
                 pathsToProcess = selectedFiles.ToList();
             }
 
+            // 3. Assign files to their groups
             foreach (var relativePath in pathsToProcess)
             {
                 string fullPath = Path.Combine(solutionPath, relativePath);
