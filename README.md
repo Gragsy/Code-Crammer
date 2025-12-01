@@ -1,4 +1,3 @@
-# Code Crammer v1.3.1 
 
 <img width="1051" height="704" alt="image" src="https://github.com/user-attachments/assets/04ca51ca-0249-4048-9555-f1d6f6e3f102" />
 
@@ -45,7 +44,7 @@ Code Crammer gives you granular control over what the AI sees. You decide what i
 - Quick Cram (right‑click → instant Notepad output)  
 - Token Estimator (real‑time token cost preview)  
 
-## 🚀 What’s New in v1.3.0
+## 🚀 What’s New in v1.3.2
 
 - **Clipboard Safety Valve** (100MB limit, STA thread)  
 - **Path Traversal Protection**  
